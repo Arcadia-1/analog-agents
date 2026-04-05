@@ -100,7 +100,7 @@ Read the margin report returned by verifier.
 
 - If any spec FAILS: dispatch designer again with the margin report. Increment iteration counter.
 - If all specs PASS at L1/L2: proceed to sign-off check.
-- **Maximum iterations:** warn user after 5 iterations without convergence. Do not loop indefinitely.
+- **Maximum iterations: 3.** If specs still fail after 3 designer→verifier loops, stop and escalate to the user. At this point the issue is likely topology-level (not parameter tuning) and requires human judgment. Report which specs failed, by how much, and across which corners.
 
 ### Step 4 — Sign-off gate
 
@@ -123,6 +123,40 @@ Dispatch designer with tape-out instruction:
 | **L1 Functional** | default, every iteration | TT 27°C nominal | Basic operating point check |
 | **L2 Spec** | when L1 passes, before claiming convergence | TT 27°C nominal | All spec targets at typical |
 | **L3 PVT** | mandatory before tape-out | Full corner matrix from spec.yml | Robustness across PVT |
+
+## Handoff Contracts
+
+Every agent handoff must include the required payload. An incomplete handoff is not a valid handoff — do not dispatch the next agent until all items are present.
+
+### spec.yml → Designer
+
+| Field | Required |
+|-------|----------|
+| `spec.yml` path | ✓ |
+| Netlist path or "create from scratch" | ✓ |
+| `margin-report.md` from last verifier run | ✓ (empty on first iteration) |
+| Server name from `servers.yml` | ✓ |
+
+Designer must return: `<block>.scs` + `rationale.md`
+
+### Netlist → Verifier
+
+| Field | Required |
+|-------|----------|
+| `<block>.scs` path | ✓ |
+| `spec.yml` path | ✓ |
+| Verification level (L1 / L2 / L3) | ✓ |
+| Server name from `servers.yml` | ✓ |
+
+Verifier must return: `margin-report.md` with quantified margins per spec per corner
+
+### Verifier FAIL → Designer (loop)
+
+Verifier feedback must be actionable — not just "phase_margin failed" but:
+- Which spec, which corner, measured value, target, shortfall
+- Suggested cause (e.g., "compensation cap too small")
+
+Designer response must update `rationale.md` explaining what changed and why.
 
 ## Output Artifacts
 
