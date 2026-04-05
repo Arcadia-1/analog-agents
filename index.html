@@ -176,7 +176,7 @@ footer a{color:var(--accent)}
 <section class="hero">
   <div class="hero-badge">Agentic Skill Framework for Analog IC Design</div>
   <h1>analog<span>-agents</span></h1>
-  <p>Two AI agents collaborate on your analog circuit — one designs, one verifies. They converge on specs, then tape out to Virtuoso.</p>
+  <p>Two AI agents collaborate on your analog front-end — one designs, one verifies. They converge on specs until every schematic is verified.</p>
 
   <!-- Agent duo preview -->
   <div style="display:flex;gap:1.5rem;margin-top:2.5rem;flex-wrap:wrap;justify-content:center;animation:fadeDown 0.8s ease 0.25s both">
@@ -184,7 +184,7 @@ footer a{color:var(--accent)}
       <span style="font-size:1.3rem">&#x1f3af;</span>
       <div style="text-align:left">
         <div style="font-weight:700;font-size:0.95rem;color:var(--designer)">Designer</div>
-        <div style="font-size:0.75rem;color:var(--text3)">Hand-calc &bull; Netlist &bull; Tape-out</div>
+        <div style="font-size:0.75rem;color:var(--text3)">Hand-calc &bull; Netlist &bull; Rationale</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;color:var(--text3);font-size:1.2rem;padding-top:0.2rem">&#x21c4;</div>
@@ -221,7 +221,7 @@ footer a{color:var(--accent)}
         <ul class="agent-perms">
           <li>Read/write netlist files (.scs, .sp, .net)</li>
           <li>Produces rationale.md with design equations</li>
-          <li>Handles tape-out to Virtuoso after sign-off</li>
+          <li>Delivers verified netlist ready for next design stage</li>
           <li>Never runs simulations — that's the verifier's job</li>
         </ul>
         <div class="comm-style">
@@ -312,8 +312,8 @@ footer a{color:var(--accent)}
       <div class="wf-step" data-anim>
         <div class="wf-num tapeout">&#x2713;</div>
         <div class="wf-content">
-          <h3>Tape-out</h3>
-          <p>Designer migrates verified netlist to Virtuoso cellview. LVS check. Done.</p>
+          <h3>Verified Schematic</h3>
+          <p>All specs pass across all corners. Verified netlist delivered, ready for the next stage.</p>
         </div>
       </div>
     </div>
@@ -345,7 +345,7 @@ footer a{color:var(--accent)}
       <div class="handoff-arrow">&rarr;</div>
       <div class="handoff-card" style="border-color:rgba(34,197,94,0.3)">
         <h4>&#x2713; Converged</h4>
-        <p>All specs pass &rarr; tape-out</p>
+        <p>All specs pass &rarr; verified &amp; delivered</p>
       </div>
     </div>
 
@@ -390,7 +390,7 @@ footer a{color:var(--accent)}
       <div class="level-card">
         <div class="level-badge">L3 PVT</div>
         <h3>Does It Survive Corners?</h3>
-        <p>Full corner matrix from spec.yml. Mandatory before tape-out. No shortcuts.</p>
+        <p>Full corner matrix from spec.yml. Mandatory before sign-off. No shortcuts.</p>
         <div class="level-corner">TT &bull; SS &bull; FF &bull; SF &bull; FS &times; temp &times; voltage</div>
       </div>
     </div>
@@ -503,7 +503,7 @@ footer a{color:var(--accent)}
     <a href="https://github.com/Arcadia-1/analog-agents/issues">Issues</a>
     <a href="https://github.com/Arcadia-1/virtuoso-bridge-lite">virtuoso-bridge</a>
   </div>
-  <p>Built by <a href="https://github.com/Arcadia-1">Arcadia-1</a> &mdash; spec in, tape-out ready.</p>
+  <p>Built by <a href="https://github.com/Arcadia-1">Arcadia-1</a> &mdash; agentic analog front-end design.</p>
 </footer>
 
 <script>

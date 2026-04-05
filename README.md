@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/analog--agents-spec%20in%2C%20tape--out%20ready-00d4aa?style=for-the-badge&labelColor=0a0a0a" alt="analog-agents"/>
+  <img src="https://img.shields.io/badge/analog--agents-spec%20in%2C%20verified%20schematic%20out-00d4aa?style=for-the-badge&labelColor=0a0a0a" alt="analog-agents"/>
 </p>
 
 <p align="center">
-  <strong>AI-native analog IC design — spec in, tape-out ready.</strong><br/>
+  <strong>Agentic analog front-end design — spec in, verified schematic out.</strong><br/>
   Two specialized agents. One convergence loop. Zero ambiguity.
 </p>
 
@@ -44,11 +44,11 @@
 
 **analog-agents** is an agentic skill framework that brings real analog engineering discipline to AI-assisted circuit design. It works with any coding agent that supports skill files.
 
-Most AI tools treat analog design like software: write some code, run some tests, ship it. That misses everything that makes analog hard — the spec sheet with quantitative targets, the PVT corner matrix, the sizing rationale, the convergence loop between design and simulation, the sign-off gate before tape-out.
+Most AI tools treat analog design like software: write some code, run some tests, ship it. That misses everything that makes analog hard — the spec sheet with quantitative targets, the PVT corner matrix, the sizing rationale, the convergence loop between design and simulation, the sign-off gate before delivering a verified schematic.
 
 analog-agents doesn't miss any of that.
 
-It dispatches two agents — a **designer** and a **verifier** — with distinct roles, strict permissions, and defined handoff contracts. They iterate until every spec passes with margin. Then the designer tapes out to Virtuoso.
+It dispatches two agents — a **designer** and a **verifier** — with distinct roles, strict permissions, and defined handoff contracts. They iterate until every spec passes with margin, delivering a verified schematic ready for the next stage.
 
 ```
 spec.yml  ──►  designer agent
@@ -63,7 +63,7 @@ spec.yml  ──►  designer agent
      └── YES → sign-off gate (L3 PVT required)
                     │
                     ▼
-          designer: tape-out → Virtuoso
+          ✓ verified schematic delivered
 ```
 
 ## The Two Agents
@@ -74,7 +74,7 @@ Owns the netlist. Thinks in small-signal equations. Shows their math.
 - Reads `spec.yml`, produces `<block>.scs` + `rationale.md`
 - Every `.param` value comes with a design equation
 - Responds to verifier failures with calculated adjustments, not guesses
-- Handles tape-out to Virtuoso after sign-off
+- Delivers verified netlist ready for next design stage
 
 ### 🔬 Verifier
 Owns the simulation. Never touches the netlist. Always quantifies.
@@ -92,7 +92,7 @@ Don't run full PVT corners just to check if the circuit turns on. Escalate delib
 |-------|------|-----------|---------|
 | **L1 Functional** | Every iteration (default) | `.op` at TT/27°C/nominal | Does the circuit operate? Are transistors in saturation? |
 | **L2 Spec** | When L1 passes | AC + noise + tran + DC at TT | Do all spec targets pass at typical corner? |
-| **L3 PVT** | Before tape-out (mandatory) | Full corner matrix | Does the design hold across process/voltage/temperature? |
+| **L3 PVT** | Before sign-off (mandatory) | Full corner matrix | Does the design hold across process/voltage/temperature? |
 
 ## Spec Sheet
 
