@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # PostToolUse hook — fires after Bash calls matching spectre|virtuoso-bridge
-# Finds the most recent PSF output directory and runs spec check.
+# 1. Finds the most recent PSF output directory and runs spec check
+# 2. Runs designer's custom per-block hook if present
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -17,4 +18,22 @@ if [ -z "${PSF_DIR}" ]; then
   exit 0  # No PSF output found, nothing to check
 fi
 
+# --- 1. Standard spec check (always runs) ---
 python3 "${SCRIPT_DIR}/post_sim_check.py" "${PSF_DIR}" "${SPEC_YML}" "${SIM_LOG}"
+
+# --- 2. Designer's custom per-block hook (if present) ---
+# Look for post-sim-hook.py in any blocks/<name>/ directory that matches the PSF path
+for BLOCK_DIR in "${REPO_ROOT}"/blocks/*/; do
+  [ -d "$BLOCK_DIR" ] || continue
+  BLOCK_NAME="$(basename "$BLOCK_DIR")"
+
+  # Only run if this simulation is for this block (PSF path contains block name)
+  if echo "${PSF_DIR}" | grep -q "${BLOCK_NAME}"; then
+    CUSTOM_HOOK="${BLOCK_DIR}/post-sim-hook.py"
+    if [ -f "$CUSTOM_HOOK" ]; then
+      # Pass same args as standard check + block dir
+      python3 "$CUSTOM_HOOK" "${PSF_DIR}" "${SPEC_YML}" "${SIM_LOG}" "${BLOCK_DIR}" || true
+    fi
+    break
+  fi
+done

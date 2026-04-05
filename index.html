@@ -10,7 +10,7 @@
   --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a2e;
   --accent:#00d4aa;--accent2:#00b894;--accent3:#6c5ce7;
   --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
-  --designer:#f59e0b;--verifier:#3b82f6;
+  --architect:#e879f9;--designer:#f59e0b;--verifier:#3b82f6;
   --pass:#22c55e;--fail:#ef4444;
   --radius:12px;--radius-lg:20px;
 }
@@ -26,7 +26,7 @@ a:hover{text-decoration:underline}
 .hero-badge{display:inline-block;padding:0.4rem 1.2rem;border:1px solid var(--accent);border-radius:999px;font-size:0.8rem;color:var(--accent);letter-spacing:0.05em;margin-bottom:2rem;text-transform:uppercase;animation:fadeDown 0.8s ease}
 .hero h1{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;letter-spacing:-0.03em;animation:fadeDown 0.8s ease 0.1s both}
 .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{font-size:1.25rem;color:var(--text2);max-width:600px;margin:1.5rem auto;animation:fadeDown 0.8s ease 0.2s both}
+.hero p{font-size:1.25rem;color:var(--text2);max-width:650px;margin:1.5rem auto;animation:fadeDown 0.8s ease 0.2s both}
 .hero-cta{display:flex;gap:1rem;margin-top:2rem;flex-wrap:wrap;justify-content:center;animation:fadeDown 0.8s ease 0.3s both}
 .btn{padding:0.8rem 2rem;border-radius:999px;font-size:0.95rem;font-weight:600;border:none;cursor:pointer;transition:all 0.3s}
 .btn-primary{background:var(--accent);color:var(--bg)}
@@ -53,6 +53,7 @@ section{padding:6rem 2rem}
 .wf-step:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,0.4)}
 .wf-num{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;flex-shrink:0}
 .wf-num.spec{background:rgba(0,212,170,0.15);color:var(--accent)}
+.wf-num.architect{background:rgba(232,121,249,0.15);color:var(--architect)}
 .wf-num.designer{background:rgba(245,158,11,0.15);color:var(--designer)}
 .wf-num.verifier{background:rgba(59,130,246,0.15);color:var(--verifier)}
 .wf-num.gate{background:rgba(108,92,231,0.15);color:var(--accent3)}
@@ -64,13 +65,15 @@ section{padding:6rem 2rem}
 .wf-loop .loop-icon{animation:spin 3s linear infinite}
 
 /* Agent cards */
-.agents-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2rem}
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem}
 .agent-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius-lg);padding:2.5rem;position:relative;overflow:hidden;transition:all 0.4s}
 .agent-card:hover{transform:translateY(-5px);box-shadow:0 20px 60px rgba(0,0,0,0.4)}
 .agent-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.agent-card.architect-card::before{background:linear-gradient(90deg,var(--architect),transparent)}
 .agent-card.designer-card::before{background:linear-gradient(90deg,var(--designer),transparent)}
 .agent-card.verifier-card::before{background:linear-gradient(90deg,var(--verifier),transparent)}
 .agent-icon{width:56px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:1.5rem}
+.agent-card.architect-card .agent-icon{background:rgba(232,121,249,0.12)}
 .agent-card.designer-card .agent-icon{background:rgba(245,158,11,0.12)}
 .agent-card.verifier-card .agent-icon{background:rgba(59,130,246,0.12)}
 .agent-card h3{font-size:1.4rem;margin-bottom:0.5rem}
@@ -78,6 +81,7 @@ section{padding:6rem 2rem}
 .agent-perms{list-style:none;display:flex;flex-direction:column;gap:0.6rem}
 .agent-perms li{font-size:0.88rem;color:var(--text2);display:flex;align-items:flex-start;gap:0.5rem}
 .agent-perms li::before{content:'';width:6px;height:6px;border-radius:50%;margin-top:0.5rem;flex-shrink:0}
+.architect-card .agent-perms li::before{background:var(--architect)}
 .designer-card .agent-perms li::before{background:var(--designer)}
 .verifier-card .agent-perms li::before{background:var(--verifier)}
 
@@ -85,6 +89,7 @@ section{padding:6rem 2rem}
 .comm-style{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,0.06)}
 .comm-style h4{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text3);margin-bottom:0.8rem}
 .comm-quote{font-size:0.85rem;color:var(--text2);font-style:italic;padding:0.6rem 0.8rem;border-left:2px solid;margin-bottom:0.5rem;border-radius:0 4px 4px 0}
+.architect-card .comm-quote{border-color:var(--architect);background:rgba(232,121,249,0.04)}
 .designer-card .comm-quote{border-color:var(--designer);background:rgba(245,158,11,0.04)}
 .verifier-card .comm-quote{border-color:var(--verifier);background:rgba(59,130,246,0.04)}
 
@@ -119,7 +124,7 @@ section{padding:6rem 2rem}
 /* Handoff */
 .handoff-section{background:var(--bg)}
 .handoff-flow{display:flex;align-items:stretch;gap:0;justify-content:center;flex-wrap:wrap;margin-top:2rem}
-.handoff-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:1.5rem;width:240px;text-align:center;transition:all 0.3s}
+.handoff-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:1.5rem;width:200px;text-align:center;transition:all 0.3s}
 .handoff-card:hover{border-color:var(--accent)}
 .handoff-card h4{font-size:0.95rem;margin-bottom:0.5rem}
 .handoff-card p{font-size:0.8rem;color:var(--text2)}
@@ -176,18 +181,24 @@ footer a{color:var(--accent)}
 <section class="hero">
   <div class="hero-badge">Agentic Skill Framework for Analog IC Design</div>
   <h1>analog<span>-agents</span></h1>
-  <p>Two AI agents collaborate on your analog front-end — one designs, one verifies. They converge on specs until every schematic is verified.</p>
+  <p>Three AI agents collaborate on your analog front-end &mdash; one architects, one designs, one verifies. They converge on specs until every schematic is verified.</p>
 
-  <!-- Agent duo preview -->
-  <div style="display:flex;gap:1.5rem;margin-top:2.5rem;flex-wrap:wrap;justify-content:center;animation:fadeDown 0.8s ease 0.25s both">
+  <!-- Agent trio preview -->
+  <div style="display:flex;gap:1.2rem;margin-top:2.5rem;flex-wrap:wrap;justify-content:center;animation:fadeDown 0.8s ease 0.25s both">
+    <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(232,121,249,0.08);border:1px solid rgba(232,121,249,0.2);border-radius:999px">
+      <span style="font-size:1.3rem">&#x1f3d7;</span>
+      <div style="text-align:left">
+        <div style="font-weight:700;font-size:0.95rem;color:var(--architect)">Architect</div>
+        <div style="font-size:0.75rem;color:var(--text3)">Decompose &bull; Budget &bull; Validate</div>
+      </div>
+    </div>
     <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:999px">
       <span style="font-size:1.3rem">&#x1f3af;</span>
       <div style="text-align:left">
         <div style="font-weight:700;font-size:0.95rem;color:var(--designer)">Designer</div>
-        <div style="font-size:0.75rem;color:var(--text3)">Hand-calc &bull; Netlist &bull; Rationale</div>
+        <div style="font-size:0.75rem;color:var(--text3)">Hand-calc &bull; Netlist &bull; Optimize</div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;color:var(--text3);font-size:1.2rem;padding-top:0.2rem">&#x21c4;</div>
     <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:999px">
       <span style="font-size:1.3rem">&#x1f52c;</span>
       <div style="text-align:left">
@@ -206,14 +217,33 @@ footer a{color:var(--accent)}
   </div>
 </section>
 
-<!-- Agents (moved before workflow) -->
+<!-- Agents -->
 <section id="agents">
   <div class="container">
     <div class="section-label">Meet the Agents</div>
-    <div class="section-title">Two Roles. Clear Boundaries.</div>
+    <div class="section-title">Three Roles. Clear Boundaries.</div>
     <div class="section-subtitle">Each agent has strict permissions and a defined communication style. No overlap, no ambiguity.</div>
 
     <div class="agents-grid">
+      <div class="agent-card architect-card">
+        <div class="agent-icon">&#x1f3d7;</div>
+        <h3>Architect</h3>
+        <p class="agent-tagline">Owns the system. Decomposes, budgets, validates, integrates.</p>
+        <ul class="agent-perms">
+          <li>Selects architecture with tradeoff analysis</li>
+          <li>Decomposes into sub-blocks, derives specs &amp; budgets</li>
+          <li>Builds Verilog-A behavioral models for validation</li>
+          <li>Defines verification plans &mdash; what to verify and how</li>
+          <li>Audits verification conditions before reading numbers</li>
+          <li>Integrates verified sub-blocks at system level</li>
+        </ul>
+        <div class="comm-style">
+          <h4>Communication Style</h4>
+          <div class="comm-quote">"ENOB budget: 0.3 bit comparator noise, 0.2 bit DAC INL, 0.1 bit jitter &rarr; 7.9 available vs 7.5 required"</div>
+          <div class="comm-quote">"PSRR testbench missing supply modulation &mdash; redo before evaluating numbers"</div>
+        </div>
+      </div>
+
       <div class="agent-card designer-card">
         <div class="agent-icon">&#x1f3af;</div>
         <h3>Designer</h3>
@@ -221,30 +251,32 @@ footer a{color:var(--accent)}
         <ul class="agent-perms">
           <li>Read/write netlist files (.scs, .sp, .net)</li>
           <li>Produces rationale.md with design equations</li>
-          <li>Delivers verified netlist ready for next design stage</li>
-          <li>Never runs simulations — that's the verifier's job</li>
+          <li>Can invoke optimizer when specs conflict</li>
+          <li>Writes custom per-block post-sim hooks</li>
+          <li>Never runs simulations &mdash; that's the verifier's job</li>
         </ul>
         <div class="comm-style">
           <h4>Communication Style</h4>
           <div class="comm-quote">"Sized M1 20% wider than calc minimum to account for mismatch"</div>
-          <div class="comm-quote">"Increased Cc from 2p to 2.8p to recover 4° phase margin"</div>
+          <div class="comm-quote">"Increased Cc from 2p to 2.8p to recover 4&deg; phase margin"</div>
         </div>
       </div>
 
       <div class="agent-card verifier-card">
         <div class="agent-icon">&#x1f52c;</div>
         <h3>Verifier</h3>
-        <p class="agent-tagline">Owns the simulation. Never touches the netlist. Always quantifies.</p>
+        <p class="agent-tagline">Executes the verification plan. Never touches the netlist. Always quantifies.</p>
         <ul class="agent-perms">
-          <li>Read-only access to netlist files</li>
+          <li>Follows architect's verification plan exactly</li>
           <li>Writes testbench, runs Spectre, writes margin-report.md</li>
-          <li>Reports margin per spec per corner — never just pass/fail</li>
+          <li>Documents verification conditions alongside results</li>
+          <li>Reports margin per spec per corner &mdash; never just pass/fail</li>
           <li>Never modifies the designer's netlist</li>
         </ul>
         <div class="comm-style">
           <h4>Communication Style</h4>
-          <div class="comm-quote">"phase_margin: measured 41.2°, target &ge;45°, short by 3.8° at SS/125°C"</div>
-          <div class="comm-quote">"Increase Cc to ~2.8p; expect &minus;5MHz UGBW tradeoff"</div>
+          <div class="comm-quote">"phase_margin: measured 41.2&deg;, target &ge;45&deg;, short by 3.8&deg; at SS/125&deg;C"</div>
+          <div class="comm-quote">"STB probe at loop break, Middlebrook method, output loaded with 1pF&Vert;10k&Omega;"</div>
         </div>
       </div>
     </div>
@@ -263,7 +295,25 @@ footer a{color:var(--accent)}
         <div class="wf-num spec">S</div>
         <div class="wf-content">
           <h3>spec.yml</h3>
-          <p>Quantitative targets — gain, bandwidth, phase margin, noise, power. The contract every agent reads.</p>
+          <p>Quantitative targets &mdash; gain, bandwidth, phase margin, noise, power. The contract every agent reads.</p>
+        </div>
+      </div>
+      <div class="wf-arrow"></div>
+
+      <div class="wf-step" data-anim>
+        <div class="wf-num architect">A</div>
+        <div class="wf-content">
+          <h3>Architect: Decompose</h3>
+          <p>Select architecture, decompose into sub-blocks, derive specs, allocate budgets, define verification plans.</p>
+        </div>
+      </div>
+      <div class="wf-arrow"></div>
+
+      <div class="wf-step" data-anim>
+        <div class="wf-num architect">A</div>
+        <div class="wf-content">
+          <h3>Architect: Behavioral Validation</h3>
+          <p>Build Verilog-A models per sub-block. System-level simulation confirms top-level specs are achievable.</p>
         </div>
       </div>
       <div class="wf-arrow"></div>
@@ -272,7 +322,7 @@ footer a{color:var(--accent)}
         <div class="wf-num designer">D</div>
         <div class="wf-content">
           <h3>Designer Agent</h3>
-          <p>Hand-calc sizing, produces Spectre netlist + rationale.md explaining every parameter choice.</p>
+          <p>Hand-calc sizing per sub-block, produces Spectre netlist + rationale.md. Can invoke optimizer for tight specs.</p>
         </div>
       </div>
       <div class="wf-arrow"></div>
@@ -281,22 +331,31 @@ footer a{color:var(--accent)}
         <div class="wf-num verifier">V</div>
         <div class="wf-content">
           <h3>Verifier Agent</h3>
-          <p>Read-only netlist access. Writes testbench, runs Spectre, reports margin per spec per corner.</p>
+          <p>Executes architect's verification plan. Reports verification conditions + margin per spec per corner.</p>
         </div>
       </div>
       <div class="wf-arrow"></div>
 
       <div class="wf-step" data-anim>
-        <div class="wf-num" style="background:rgba(239,68,68,0.12);color:var(--fail)">?</div>
+        <div class="wf-num architect">A</div>
         <div class="wf-content">
-          <h3>All Specs Pass?</h3>
-          <p>If NO — margin report flows back to designer. Max 3 iterations before escalating to human.</p>
+          <h3>Architect Reviews</h3>
+          <p>Audits verification conditions first (testbench correct?), then evaluates spec numbers. Wrong setup &rarr; redo.</p>
         </div>
       </div>
 
       <div class="wf-loop">
         <span class="loop-icon">&#x21bb;</span>
-        convergence loop (max 3 iterations)
+        convergence loop (max 3 iterations per sub-block)
+      </div>
+      <div class="wf-arrow"></div>
+
+      <div class="wf-step" data-anim>
+        <div class="wf-num architect">A</div>
+        <div class="wf-content">
+          <h3>Architect: Integration</h3>
+          <p>Replace behavioral models with verified netlists. Run top-level integration verification.</p>
+        </div>
       </div>
       <div class="wf-arrow"></div>
 
@@ -304,7 +363,7 @@ footer a{color:var(--accent)}
         <div class="wf-num gate">G</div>
         <div class="wf-content">
           <h3>Sign-off Gate</h3>
-          <p>L3 PVT verification mandatory. All specs must pass across all corners with margin.</p>
+          <p>L3 Robustness verification mandatory. All specs must pass across all PVT corners with margin.</p>
         </div>
       </div>
       <div class="wf-arrow"></div>
@@ -313,7 +372,7 @@ footer a{color:var(--accent)}
         <div class="wf-num tapeout">&#x2713;</div>
         <div class="wf-content">
           <h3>Verified Schematic</h3>
-          <p>All specs pass across all corners. Verified netlist delivered, ready for the next stage.</p>
+          <p>All specs pass across all corners. Verified netlist delivered. Lessons learned recorded.</p>
         </div>
       </div>
     </div>
@@ -333,6 +392,11 @@ footer a{color:var(--accent)}
         <p>Quantitative targets + corner definitions</p>
       </div>
       <div class="handoff-arrow">&rarr;</div>
+      <div class="handoff-card" style="border-color:rgba(232,121,249,0.3)">
+        <h4>&#x1f3d7; Architect</h4>
+        <p>Returns: architecture.md + budget.md + sub-block specs + verification plans</p>
+      </div>
+      <div class="handoff-arrow">&rarr;</div>
       <div class="handoff-card" style="border-color:rgba(245,158,11,0.3)">
         <h4>&#x1f3af; Designer</h4>
         <p>Returns: netlist.scs + rationale.md</p>
@@ -340,7 +404,7 @@ footer a{color:var(--accent)}
       <div class="handoff-arrow">&rarr;</div>
       <div class="handoff-card" style="border-color:rgba(59,130,246,0.3)">
         <h4>&#x1f52c; Verifier</h4>
-        <p>Returns: margin-report.md with evidence</p>
+        <p>Returns: margin-report.md with conditions + evidence</p>
       </div>
       <div class="handoff-arrow">&rarr;</div>
       <div class="handoff-card" style="border-color:rgba(34,197,94,0.3)">
@@ -358,7 +422,7 @@ footer a{color:var(--accent)}
         <tbody>
           <tr><td>dc_gain</td><td>63.4 dB</td><td>&ge;60 dB</td><td class="margin-pass">+3.4 dB</td><td class="margin-pass">&#x2713;</td></tr>
           <tr><td>ugbw</td><td>112 MHz</td><td>&ge;100 MHz</td><td class="margin-pass">+12 MHz</td><td class="margin-pass">&#x2713;</td></tr>
-          <tr><td>phase_margin</td><td>41.2°</td><td>&ge;45°</td><td class="margin-fail">&minus;3.8°</td><td class="margin-fail">&#x2717;</td></tr>
+          <tr><td>phase_margin</td><td>41.2&deg;</td><td>&ge;45&deg;</td><td class="margin-fail">&minus;3.8&deg;</td><td class="margin-fail">&#x2717;</td></tr>
           <tr><td>noise_input</td><td>4.2 nV/&radic;Hz</td><td>&le;5 nV/&radic;Hz</td><td class="margin-pass">+0.8</td><td class="margin-pass">&#x2713;</td></tr>
           <tr><td>power</td><td>0.87 mW</td><td>&le;1.0 mW</td><td class="margin-pass">+0.13 mW</td><td class="margin-pass">&#x2713;</td></tr>
         </tbody>
@@ -371,26 +435,26 @@ footer a{color:var(--accent)}
 <section class="levels-section" id="levels">
   <div class="container">
     <div class="section-label">Staged Verification</div>
-    <div class="section-title">Don't Run PVT Until It Works at Typical</div>
-    <div class="section-subtitle">Escalate verification deliberately. L1 &rarr; L2 &rarr; L3.</div>
+    <div class="section-title">Functional &rarr; Performance &rarr; Robustness</div>
+    <div class="section-subtitle">Escalate verification deliberately. The architect defines what each level checks.</div>
 
     <div class="levels">
       <div class="level-card">
         <div class="level-badge">L1 FUNCTIONAL</div>
-        <h3>Does It Turn On?</h3>
-        <p>Single .op analysis at TT / 27°C / nominal. Check operating point, saturation, bias currents.</p>
-        <div class="level-corner">TT &bull; 27°C &bull; 1.8V</div>
+        <h3>Does It Work?</h3>
+        <p>Not just a DC operating point. Confirms basic function: ADC produces codes, comparator resolves, amplifier amplifies. Includes .op + .tran/.ac as needed.</p>
+        <div class="level-corner">TT &bull; 27&deg;C &bull; .op + .tran/.ac</div>
       </div>
       <div class="level-card">
-        <div class="level-badge">L2 SPEC</div>
+        <div class="level-badge">L2 PERFORMANCE</div>
         <h3>Does It Meet Targets?</h3>
-        <p>AC, noise, transient, DC at typical corner. All spec targets checked with quantified margin.</p>
-        <div class="level-corner">TT &bull; 27°C &bull; AC + noise + tran + DC</div>
+        <p>All spec analyses at typical corner. Every result quantified with margin. Architect audits verification conditions before evaluating numbers.</p>
+        <div class="level-corner">TT &bull; 27&deg;C &bull; Full spec analysis</div>
       </div>
       <div class="level-card">
-        <div class="level-badge">L3 PVT</div>
+        <div class="level-badge">L3 ROBUSTNESS</div>
         <h3>Does It Survive Corners?</h3>
-        <p>Full corner matrix from spec.yml. Mandatory before sign-off. No shortcuts.</p>
+        <p>Full PVT corner matrix from spec.yml. Mandatory before sign-off. No shortcuts to tape-out.</p>
         <div class="level-corner">TT &bull; SS &bull; FF &bull; SF &bull; FS &times; temp &times; voltage</div>
       </div>
     </div>
@@ -402,7 +466,7 @@ footer a{color:var(--accent)}
   <div class="container">
     <div class="section-label">Central Contract</div>
     <div class="section-title">One Spec Sheet. Every Agent Reads It.</div>
-    <div class="section-subtitle">Quantitative, not prose. The spec.yml is not documentation — it is the contract.</div>
+    <div class="section-subtitle">Quantitative, not prose. The spec.yml is not documentation &mdash; it is the contract.</div>
 
     <div class="spec-block">
       <div class="spec-header">
@@ -421,7 +485,7 @@ footer a{color:var(--accent)}
 &nbsp;&nbsp;<span class="key">noise_input</span>:&nbsp; { <span class="key">max</span>: <span class="val">5</span>,&nbsp;&nbsp; <span class="key">unit</span>: <span class="str">nV/rtHz</span> }<br>
 &nbsp;&nbsp;<span class="key">power</span>:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="key">max</span>: <span class="val">1.0</span>, <span class="key">unit</span>: <span class="str">mW</span> }<br>
 <br>
-<span class="key">corners</span>: <span class="comment"># L3 PVT</span><br>
+<span class="key">corners</span>: <span class="comment"># L3 Robustness</span><br>
 &nbsp;&nbsp;- { <span class="key">name</span>: <span class="str">tt_27c</span>,&nbsp;&nbsp; <span class="key">process</span>: <span class="str">tt</span>, <span class="key">temp</span>: <span class="val">27</span> }<br>
 &nbsp;&nbsp;- { <span class="key">name</span>: <span class="str">ss_125c</span>,  <span class="key">process</span>: <span class="str">ss</span>, <span class="key">temp</span>: <span class="val">125</span> }<br>
 &nbsp;&nbsp;- { <span class="key">name</span>: <span class="str">ff_m40c</span>,  <span class="key">process</span>: <span class="str">ff</span>, <span class="key">temp</span>: <span class="val">-40</span> }
@@ -435,23 +499,28 @@ footer a{color:var(--accent)}
   <div class="container">
     <div class="section-label">Automation</div>
     <div class="section-title">Hooks That Think For You</div>
-    <div class="section-subtitle">Every simulation is auto-checked. Every session starts with context. Every write is guarded.</div>
+    <div class="section-subtitle">Simulations auto-checked. Netlist changes auto-logged. Agents write their own hooks.</div>
 
     <div class="hooks-grid">
       <div class="hook-card">
-        <div class="hook-name">SessionStart</div>
-        <h3>Context Injection</h3>
-        <p>Injects the analog-agents skill, reads spec.yml summary, checks if virtuoso-bridge is online. The agent knows the project state before you type a word.</p>
-      </div>
-      <div class="hook-card">
-        <div class="hook-name">PostToolUse</div>
+        <div class="hook-name">PostToolUse &bull; spectre</div>
         <h3>Auto Spec Check</h3>
-        <p>After every Spectre run: parse PSF, compare against spec.yml, append to sim-log.yml, inject margin table into context. Zero manual parsing.</p>
+        <p>After every Spectre run: parse PSF, compare against spec.yml, append to sim-log.yml, inject margin table into context. Then run designer's custom per-block hook.</p>
       </div>
       <div class="hook-card">
-        <div class="hook-name">PreToolUse</div>
+        <div class="hook-name">PostToolUse &bull; Write/Edit</div>
+        <h3>Netlist Change Tracking</h3>
+        <p>After every netlist edit: syntax check via spectre -check, then diff .param changes and record to iteration-log.yml automatically.</p>
+      </div>
+      <div class="hook-card">
+        <div class="hook-name">PreToolUse &bull; Write/Edit</div>
         <h3>Permission Guard</h3>
         <p>Warns when a verifier agent tries to write to .scs/.sp/.net files. The netlist is the designer's territory.</p>
+      </div>
+      <div class="hook-card">
+        <div class="hook-name">Designer-defined</div>
+        <h3>Custom Per-Block Hooks</h3>
+        <p>Designer writes blocks/&lt;name&gt;/post-sim-hook.py at the start of each block. Runs after every simulation &mdash; trend plots, sensitivity tracking, whatever the designer needs.</p>
       </div>
     </div>
   </div>

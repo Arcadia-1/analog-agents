@@ -29,5 +29,6 @@ servers:
 # Optional: map roles to servers.
 # If absent, all roles use the server named 'default'.
 role_mapping:
+  architect: design-server
   designer: design-server
   verifier: sim-server

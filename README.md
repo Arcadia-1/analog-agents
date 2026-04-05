@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>Agentic analog front-end design — spec in, verified schematic out.</strong><br/>
-  Two specialized agents. One convergence loop. Zero ambiguity.
+  Three specialized agents. One convergence loop. Zero ambiguity.
 </p>
 
 <p align="center">
@@ -44,55 +44,121 @@
 
 **analog-agents** is an agentic skill framework that brings real analog engineering discipline to AI-assisted circuit design. It works with any coding agent that supports skill files.
 
-Most AI tools treat analog design like software: write some code, run some tests, ship it. That misses everything that makes analog hard — the spec sheet with quantitative targets, the PVT corner matrix, the sizing rationale, the convergence loop between design and simulation, the sign-off gate before delivering a verified schematic.
+Most AI tools treat analog design like software: write some code, run some tests, ship it. That misses everything that makes analog hard — the architecture tradeoffs, the spec budgeting across sub-blocks, the PVT corner matrix, the sizing rationale, the convergence loop between design and simulation, the sign-off gate before delivering a verified schematic.
 
 analog-agents doesn't miss any of that.
 
-It dispatches two agents — a **designer** and a **verifier** — with distinct roles, strict permissions, and defined handoff contracts. They iterate until every spec passes with margin, delivering a verified schematic ready for the next stage.
+It dispatches three agents — an **architect**, a **designer**, and a **verifier** — with distinct roles, strict permissions, and defined handoff contracts. The architect decomposes the system and validates the architecture with behavioral models. The designer and verifier iterate on each sub-block until every spec passes with margin. The architect then integrates and verifies at the system level.
 
 ```
-spec.yml  ──►  designer agent
-                    │
-           ┌────────┴────────┐
-           ▼                 ▼
-     verifier agent    (documents rationale)
-           │
-           ▼
-     all specs pass?
-     ├── NO  → margin report → designer → revise → repeat
-     └── YES → sign-off gate (L3 PVT required)
-                    │
-                    ▼
-          ✓ verified schematic delivered
+top-level spec.yml
+        |
+        v
+  architect agent (Phase 1: decompose)
+  |-- select architecture, tradeoff analysis
+  |-- derive sub-block specs + budget allocation
+  |-- define verification plans
+  |-- output: architecture.md + budget.md + blocks/*/spec.yml
+        |
+        v
+  architect agent (Phase 2: behavioral validation)
+  |-- Verilog-A model per sub-block
+  |-- system-level behavioral simulation
+  |-- confirm top-level specs achievable
+        |
+        v
+  +---------------------------------------------+
+  |  For each sub-block:                        |
+  |                                             |
+  |    designer agent ----> verifier agent      |
+  |         ^                    |              |
+  |         +------ FAIL --------+              |
+  |                                             |
+  |    architect reviews verification results   |
+  |    (audit conditions first, then numbers)   |
+  |    (max 3 iterations per sub-block)         |
+  +---------------------------------------------+
+        |
+        v
+  architect agent (Phase 3: integration)
+  |-- replace behavioral models with verified netlists
+  |-- top-level integration verification
+        |
+        v
+  sign-off gate --> L3 PVT required
+        |
+        v
+  verified schematic delivered
 ```
 
-## The Two Agents
+## The Three Agents
 
-### 🎯 Designer
+### Architect
+Owns the system architecture. Decomposes, budgets, validates, integrates.
+
+- Selects architecture (e.g., SAR vs pipeline vs sigma-delta) with tradeoff analysis
+- Breaks system into sub-blocks, derives each sub-block's spec from top-level requirements
+- Allocates power/noise/timing budgets (must close before proceeding)
+- Builds Verilog-A behavioral models to validate architecture before transistor design
+- Defines **verification plans** — what to verify, which analyses, what testbench topology
+- **Reviews verifier results**: audits verification conditions first, then evaluates numbers
+- Integrates verified sub-blocks and runs system-level verification
+- Writes `lessons_learned` at project completion for future design knowledge
+
+### Designer
 Owns the netlist. Thinks in small-signal equations. Shows their math.
 
-- Reads `spec.yml`, produces `<block>.scs` + `rationale.md`
+- Reads sub-block `spec.yml`, produces `<block>.scs` + `rationale.md`
 - Every `.param` value comes with a design equation
 - Responds to verifier failures with calculated adjustments, not guesses
+- Can invoke the **optimizer** skill when specs conflict or margins are tight
+- Writes **custom post-simulation hooks** per block to track what matters during iteration
 - Delivers verified netlist ready for next design stage
 
-### 🔬 Verifier
-Owns the simulation. Never touches the netlist. Always quantifies.
+### Verifier
+Executes the verification plan. Never touches the netlist. Always quantifies.
 
+- **Follows the architect's verification plan** — does not decide what to verify
 - Writes testbench, runs Spectre, writes `margin-report.md`
+- Reports **verification conditions** (testbench setup, stimulus, extraction method) alongside results
 - Every result includes: measured value, target, margin, corner
 - Every failure includes: shortfall, likely cause, suggested fix
-- Three verification levels — from quick functional check to full PVT matrix
 
 ## Verification Levels
 
-Don't run full PVT corners just to check if the circuit turns on. Escalate deliberately.
+Escalate verification deliberately. Don't run full PVT corners just to check if the circuit turns on.
 
 | Level | When | What Runs | Purpose |
 |-------|------|-----------|---------|
-| **L1 Functional** | Every iteration (default) | `.op` at TT/27°C/nominal | Does the circuit operate? Are transistors in saturation? |
-| **L2 Spec** | When L1 passes | AC + noise + tran + DC at TT | Do all spec targets pass at typical corner? |
-| **L3 PVT** | Before sign-off (mandatory) | Full corner matrix | Does the design hold across process/voltage/temperature? |
+| **L1 Functional** | Every iteration (default) | `.op` + `.tran`/`.ac` at TT/27C | Does the circuit perform its basic function? |
+| **L2 Performance** | When L1 passes | All spec analyses at TT | Do all spec targets pass at typical corner? |
+| **L3 Robustness** | Before sign-off (mandatory) | Full corner matrix | Does the design hold across process/voltage/temperature? |
+
+L1 is not just a DC operating point check. It confirms the circuit does what it's supposed to do: an ADC produces output codes, a comparator resolves correctly, a bootstrap switch tracks the input, an amplifier amplifies.
+
+## Architect Reviews Verification
+
+When the verifier returns results, the architect does NOT look at the numbers first:
+
+1. **Audit verification conditions** — Is the testbench correct? Stimulus applied to the right node? Measurement extracted properly? (e.g., PSRR with proper supply modulation, CMRR with correct differential vs common-mode stimulus)
+2. **Evaluate results** — Only after conditions are confirmed correct, read the numbers and decide pass/fail
+
+If verification conditions are wrong, the verifier redoes — this does not count as a design iteration.
+
+## Iteration Tracking
+
+Every design run produces `iteration-log.yml` with:
+
+- Per-sub-block iteration history (what parameters changed, why)
+- Verification redo counts (architect flagged condition errors)
+- Optimizer invocation records
+- Lessons learned at project completion
+
+Parameter changes are auto-recorded by hooks whenever a netlist is modified. The architect writes `lessons_learned` at sign-off — these insights make the next project's architect smarter.
+
+## Designer's Custom Hooks
+
+At the start of each block's design, the designer writes `blocks/<name>/post-sim-hook.py` — a custom script that runs automatically after every simulation for that block. The designer decides what it does: plot optimization trends, track parameter sensitivities, flag operating point drift. It's the designer's tool — modified, rewritten, or discarded as iteration focus shifts.
 
 ## Spec Sheet
 
@@ -125,8 +191,11 @@ After every Spectre run, a `PostToolUse` hook fires automatically:
 3. Checks every value against `spec.yml` targets
 4. Appends a timestamped entry to `sim-log.yml`
 5. Injects a margin table into context — the agent sees pass/fail immediately
+6. Runs designer's custom per-block hook (if present)
 
-No manual PSF parsing. No wondering if that last simulation passed.
+After every netlist edit, a separate hook:
+1. Runs `spectre -check` for syntax validation
+2. Diffs `.param` changes and records them to `iteration-log.yml`
 
 ## Multi-Server Support
 
@@ -148,6 +217,7 @@ servers:
     tools: [spectre]
 
 role_mapping:
+  architect: design-server
   designer: design-server   # read/write Virtuoso
   verifier: sim-server      # simulation only
 ```
@@ -201,6 +271,7 @@ Use the analog-agents skill. Design an OTA for spec.yml.
 analog-agents/
 ├── skills/analog-agents/
 │   ├── SKILL.md                  # Master skill: workflow, convergence, sign-off gate
+│   ├── architect-prompt.md       # Architect agent template
 │   ├── designer-prompt.md        # Designer agent template
 │   └── verifier-prompt.md        # Verifier agent template
 ├── config/
@@ -209,7 +280,9 @@ analog-agents/
 │   ├── hooks.json                # Hook event registration
 │   ├── session-start             # Inject skill + check bridge + read spec on startup
 │   ├── post-sim.sh               # Triggered after every Spectre run
-│   └── post_sim_check.py         # PSF parser → spec checker → sim-log writer
+│   ├── post_sim_check.py         # PSF parser -> spec checker -> sim-log writer
+│   ├── post-netlist-check.sh     # Syntax check + param change recording
+│   └── session-summary.sh        # End-of-session summary
 └── docs/specs/                   # Design documents
 ```
 
@@ -217,13 +290,19 @@ analog-agents/
 
 **Spec-driven, not vibe-driven.** Every design decision traces back to a quantitative target. The spec sheet is not documentation — it is the contract.
 
-**Margin, not just pass/fail.** A design that passes at TT/27°C and fails at SS/125°C is not done. Verification reports numbers, not verdicts.
+**Architect before designer.** Don't jump to transistors before validating the architecture. Decompose, budget, model behaviorally, then design.
+
+**Verify the verification.** The architect audits testbench conditions before reading numbers. A wrong testbench produces wrong numbers — garbage in, garbage out.
+
+**Margin, not just pass/fail.** A design that passes at TT/27C and fails at SS/125C is not done. Verification reports numbers, not verdicts.
 
 **Rationale is a deliverable.** A netlist without hand-calc justification is a guess. The designer documents the equation behind every parameter.
 
-**Three iterations maximum.** If the design hasn't converged after three designer↔verifier loops, the problem is topology, not tuning. Stop and involve the human.
+**Three iterations maximum.** If the design hasn't converged after three designer-verifier loops, the problem is topology, not tuning. Escalate to architect or human.
 
-**Convergence over automation.** The loop runs until the circuit is right, not until the timer runs out. Sign-off requires L3 PVT. There are no shortcuts to tape-out.
+**Agents build their own tools.** Predefined templates limit what agents can do. The designer writes custom hooks, scripts, and plots as needed — no fixed formats.
+
+**Learn from every project.** Iteration logs and lessons learned accumulate design knowledge that makes the next project's architect smarter.
 
 ## Related Skills
 
@@ -234,6 +313,7 @@ analog-agents orchestrates workflow. For domain knowledge:
 | `spectre` | Run Spectre simulations from a netlist file |
 | `virtuoso` | Cadence Virtuoso schematic operations via virtuoso-bridge |
 | `veriloga` | Write Verilog-A behavioral models |
+| `evas-sim` | Behavioral simulation with EVAS Verilog-A simulator |
 | `sar-adc` | SAR ADC architecture, design, and budgeting |
 | `optimizer` | Bayesian optimization of circuit parameters |
 
