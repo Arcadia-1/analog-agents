@@ -177,12 +177,77 @@ footer a{color:var(--accent)}
   <div class="hero-badge">Agentic Skill Framework for Analog IC Design</div>
   <h1>analog<span>-agents</span></h1>
   <p>Two AI agents collaborate on your analog circuit — one designs, one verifies. They converge on specs, then tape out to Virtuoso.</p>
-  <div class="hero-cta">
+
+  <!-- Agent duo preview -->
+  <div style="display:flex;gap:1.5rem;margin-top:2.5rem;flex-wrap:wrap;justify-content:center;animation:fadeDown 0.8s ease 0.25s both">
+    <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:999px">
+      <span style="font-size:1.3rem">&#x1f3af;</span>
+      <div style="text-align:left">
+        <div style="font-weight:700;font-size:0.95rem;color:var(--designer)">Designer</div>
+        <div style="font-size:0.75rem;color:var(--text3)">Hand-calc &bull; Netlist &bull; Tape-out</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;color:var(--text3);font-size:1.2rem;padding-top:0.2rem">&#x21c4;</div>
+    <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:999px">
+      <span style="font-size:1.3rem">&#x1f52c;</span>
+      <div style="text-align:left">
+        <div style="font-weight:700;font-size:0.95rem;color:var(--verifier)">Verifier</div>
+        <div style="font-size:0.75rem;color:var(--text3)">Testbench &bull; Spectre &bull; Margin</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-cta" style="margin-top:2rem">
     <a href="https://github.com/Arcadia-1/analog-agents" class="btn btn-primary">View on GitHub</a>
     <a href="#workflow" class="btn btn-outline">See How It Works</a>
   </div>
   <div class="scroll-hint">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+  </div>
+</section>
+
+<!-- Agents (moved before workflow) -->
+<section id="agents">
+  <div class="container">
+    <div class="section-label">Meet the Agents</div>
+    <div class="section-title">Two Roles. Clear Boundaries.</div>
+    <div class="section-subtitle">Each agent has strict permissions and a defined communication style. No overlap, no ambiguity.</div>
+
+    <div class="agents-grid">
+      <div class="agent-card designer-card">
+        <div class="agent-icon">&#x1f3af;</div>
+        <h3>Designer</h3>
+        <p class="agent-tagline">Owns the netlist. Thinks in small-signal equations. Shows their math.</p>
+        <ul class="agent-perms">
+          <li>Read/write netlist files (.scs, .sp, .net)</li>
+          <li>Produces rationale.md with design equations</li>
+          <li>Handles tape-out to Virtuoso after sign-off</li>
+          <li>Never runs simulations — that's the verifier's job</li>
+        </ul>
+        <div class="comm-style">
+          <h4>Communication Style</h4>
+          <div class="comm-quote">"Sized M1 20% wider than calc minimum to account for mismatch"</div>
+          <div class="comm-quote">"Increased Cc from 2p to 2.8p to recover 4° phase margin"</div>
+        </div>
+      </div>
+
+      <div class="agent-card verifier-card">
+        <div class="agent-icon">&#x1f52c;</div>
+        <h3>Verifier</h3>
+        <p class="agent-tagline">Owns the simulation. Never touches the netlist. Always quantifies.</p>
+        <ul class="agent-perms">
+          <li>Read-only access to netlist files</li>
+          <li>Writes testbench, runs Spectre, writes margin-report.md</li>
+          <li>Reports margin per spec per corner — never just pass/fail</li>
+          <li>Never modifies the designer's netlist</li>
+        </ul>
+        <div class="comm-style">
+          <h4>Communication Style</h4>
+          <div class="comm-quote">"phase_margin: measured 41.2°, target &ge;45°, short by 3.8° at SS/125°C"</div>
+          <div class="comm-quote">"Increase Cc to ~2.8p; expect &minus;5MHz UGBW tradeoff"</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -249,51 +314,6 @@ footer a{color:var(--accent)}
         <div class="wf-content">
           <h3>Tape-out</h3>
           <p>Designer migrates verified netlist to Virtuoso cellview. LVS check. Done.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Agents -->
-<section id="agents">
-  <div class="container">
-    <div class="section-label">Agents</div>
-    <div class="section-title">Two Roles. Clear Boundaries.</div>
-    <div class="section-subtitle">Each agent has strict permissions and a defined communication style. No overlap, no ambiguity.</div>
-
-    <div class="agents-grid">
-      <div class="agent-card designer-card">
-        <div class="agent-icon">&#x1f3af;</div>
-        <h3>Designer</h3>
-        <p class="agent-tagline">Owns the netlist. Thinks in small-signal equations. Shows their math.</p>
-        <ul class="agent-perms">
-          <li>Read/write netlist files (.scs, .sp, .net)</li>
-          <li>Produces rationale.md with design equations</li>
-          <li>Handles tape-out to Virtuoso after sign-off</li>
-          <li>Never runs simulations — that's the verifier's job</li>
-        </ul>
-        <div class="comm-style">
-          <h4>Communication Style</h4>
-          <div class="comm-quote">"Sized M1 20% wider than calc minimum to account for mismatch"</div>
-          <div class="comm-quote">"Increased Cc from 2p to 2.8p to recover 4° phase margin"</div>
-        </div>
-      </div>
-
-      <div class="agent-card verifier-card">
-        <div class="agent-icon">&#x1f52c;</div>
-        <h3>Verifier</h3>
-        <p class="agent-tagline">Owns the simulation. Never touches the netlist. Always quantifies.</p>
-        <ul class="agent-perms">
-          <li>Read-only access to netlist files</li>
-          <li>Writes testbench, runs Spectre, writes margin-report.md</li>
-          <li>Reports margin per spec per corner — never just pass/fail</li>
-          <li>Never modifies the designer's netlist</li>
-        </ul>
-        <div class="comm-style">
-          <h4>Communication Style</h4>
-          <div class="comm-quote">"phase_margin: measured 41.2°, target &ge;45°, short by 3.8° at SS/125°C"</div>
-          <div class="comm-quote">"Increase Cc to ~2.8p; expect &minus;5MHz UGBW tradeoff"</div>
         </div>
       </div>
     </div>
@@ -483,7 +503,7 @@ footer a{color:var(--accent)}
     <a href="https://github.com/Arcadia-1/analog-agents/issues">Issues</a>
     <a href="https://github.com/Arcadia-1/virtuoso-bridge-lite">virtuoso-bridge</a>
   </div>
-  <p>Built by <a href="https://github.com/Arcadia-1">Arcadia-1</a> &mdash; spec in, silicon out.</p>
+  <p>Built by <a href="https://github.com/Arcadia-1">Arcadia-1</a> &mdash; spec in, tape-out ready.</p>
 </footer>
 
 <script>

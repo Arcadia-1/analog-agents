@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/analog--agents-spec%20in%2C%20silicon%20out-00d4aa?style=for-the-badge&labelColor=0a0a0a" alt="analog-agents"/>
+  <img src="https://img.shields.io/badge/analog--agents-spec%20in%2C%20tape--out%20ready-00d4aa?style=for-the-badge&labelColor=0a0a0a" alt="analog-agents"/>
 </p>
 
 <p align="center">
-  <strong>AI-native analog IC design — spec in, silicon out.</strong><br/>
+  <strong>AI-native analog IC design — spec in, tape-out ready.</strong><br/>
   Two specialized agents. One convergence loop. Zero ambiguity.
 </p>
 
