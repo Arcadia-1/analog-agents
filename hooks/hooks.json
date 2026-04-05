@@ -22,6 +22,16 @@
             "async": true
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/post-netlist-check.sh\"",
+            "async": true
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -32,6 +42,18 @@
             "type": "command",
             "command": "bash -c 'f=\"${TOOL_INPUT_FILE_PATH:-}\"; [[ \"$f\" =~ \\.(scs|sp|net)$ ]] && echo \"{\\\"decision\\\":\\\"warn\\\",\\\"reason\\\":\\\"Verifier role: netlist files are read-only. Only the designer agent should modify .scs/.sp/.net files.\\\"}\" || true'",
             "async": false
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-summary.sh\"",
+            "async": true
           }
         ]
       }
