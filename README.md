@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/analog-agents-0a0a0a?style=for-the-badge&labelColor=0a0a0a&color=00d4aa" alt="analog-agents"/>
+  <img src="https://img.shields.io/badge/analog--agents-spec%20in%2C%20silicon%20out-00d4aa?style=for-the-badge&labelColor=0a0a0a" alt="analog-agents"/>
 </p>
 
 <p align="center">
@@ -8,9 +8,34 @@
 </p>
 
 <p align="center">
-  <a href="https://claude.ai/code"><img src="https://img.shields.io/badge/Claude%20Code-native-blueviolet?style=flat-square" alt="Claude Code"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT License"/></a>
-  <a href="https://github.com/Arcadia-1/analog-agents/issues"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome"/></a>
+  <!-- GitHub -->
+  <a href="https://github.com/Arcadia-1/analog-agents/stargazers"><img src="https://img.shields.io/github/stars/Arcadia-1/analog-agents?style=flat-square&logo=github&color=f5c542" alt="GitHub Stars"/></a>
+  <a href="https://github.com/Arcadia-1/analog-agents/network/members"><img src="https://img.shields.io/github/forks/Arcadia-1/analog-agents?style=flat-square&logo=github&color=8b949e" alt="GitHub Forks"/></a>
+  <a href="https://github.com/Arcadia-1/analog-agents/issues"><img src="https://img.shields.io/github/issues/Arcadia-1/analog-agents?style=flat-square&logo=github&color=f85149" alt="Open Issues"/></a>
+  <a href="https://github.com/Arcadia-1/analog-agents/commits/main"><img src="https://img.shields.io/github/last-commit/Arcadia-1/analog-agents?style=flat-square&logo=git&color=3fb950" alt="Last Commit"/></a>
+</p>
+
+<p align="center">
+  <!-- Platforms -->
+  <a href="https://claude.ai/code"><img src="https://img.shields.io/badge/Claude%20Code-native-blueviolet?style=flat-square&logo=anthropic&logoColor=white" alt="Claude Code"/></a>
+  <a href="https://cursor.sh"><img src="https://img.shields.io/badge/Cursor-compatible-000000?style=flat-square&logo=cursor&logoColor=white" alt="Cursor"/></a>
+  <a href="https://github.com/Arcadia-1/analog-agents"><img src="https://img.shields.io/badge/AI--native-agent%20driven-ff6b35?style=flat-square" alt="AI Native"/></a>
+</p>
+
+<p align="center">
+  <!-- Tech stack -->
+  <img src="https://img.shields.io/badge/Spectre-simulator-1e3a5f?style=flat-square&logo=cadence&logoColor=white" alt="Spectre"/>
+  <img src="https://img.shields.io/badge/Virtuoso-layout%20%26%20schematic-0057a8?style=flat-square" alt="Virtuoso"/>
+  <img src="https://img.shields.io/badge/Python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/SPICE%2FSpectre-netlist-orange?style=flat-square" alt="SPICE Netlist"/>
+  <img src="https://img.shields.io/badge/PVT-corner%20aware-9b59b6?style=flat-square" alt="PVT Corners"/>
+</p>
+
+<p align="center">
+  <!-- License & contribution -->
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" alt="MIT License"/></a>
+  <a href="https://github.com/Arcadia-1/analog-agents/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome"/></a>
+  <img src="https://img.shields.io/badge/skill%20library-markdown%20only-64748b?style=flat-square" alt="No Runtime Dependencies"/>
 </p>
 
 ---
