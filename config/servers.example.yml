@@ -1,0 +1,33 @@
+# servers.example.yml
+# Copy to servers.yml and fill in real values. Never commit servers.yml (it is gitignored).
+#
+# Mode A — single shared account (simplest)
+# The server MUST be named 'default' for automatic role fallback to work.
+# servers:
+#   default:
+#     host: eda01.company.com
+#     user: shared_user
+#     key: ~/.ssh/id_eda   # optional if using ssh-agent
+#     tools: [virtuoso, spectre]
+#
+# Mode B — per-role accounts
+# NOTE: switching from Mode A requires renaming the server key (e.g. 'default' -> 'design-server')
+# and adding a role_mapping section.
+servers:
+  design-server:
+    host: eda01.company.com
+    user: designer_bot
+    key: ~/.ssh/id_design   # optional if using ssh-agent
+    tools: [virtuoso, spectre]
+
+  sim-server:
+    host: hpc02.company.com
+    user: sim_bot
+    key: ~/.ssh/id_sim   # optional if using ssh-agent
+    tools: [spectre]
+
+# Optional: map roles to servers.
+# If absent, all roles use the server named 'default'.
+role_mapping:
+  designer: design-server
+  verifier: sim-server

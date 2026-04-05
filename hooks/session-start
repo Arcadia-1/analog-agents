@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# SessionStart hook — injects analog-agents skill + checks bridge + reads spec summary
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+SKILL_CONTENT=$(cat "${PLUGIN_ROOT}/skills/analog-agents/SKILL.md" 2>/dev/null \
+  || echo "Warning: analog-agents SKILL.md not found")
+
+# Check for spec.yml in current working directory
+SPEC_SUMMARY=""
+if [ -f "spec.yml" ]; then
+  BLOCK=$(python3 -c "import yaml,sys; s=yaml.safe_load(open('spec.yml')); print(s.get('block','unknown'))" 2>/dev/null || echo "unknown")
+  N_SPECS=$(python3 -c "import yaml,sys; s=yaml.safe_load(open('spec.yml')); print(len(s.get('specs',{})))" 2>/dev/null || echo "?")
+  SPEC_SUMMARY="\n\n<analog-agents-context>Active spec.yml detected: block=${BLOCK}, ${N_SPECS} specs defined.</analog-agents-context>"
+fi
+
+# Check virtuoso-bridge connectivity (non-blocking)
+BRIDGE_STATUS=""
+if command -v virtuoso-bridge &>/dev/null; then
+  if virtuoso-bridge status &>/dev/null 2>&1; then
+    BRIDGE_STATUS="\n<analog-agents-context>virtuoso-bridge: ONLINE</analog-agents-context>"
+  else
+    BRIDGE_STATUS="\n<analog-agents-context>virtuoso-bridge: OFFLINE — run 'virtuoso-bridge start' before tape-out</analog-agents-context>"
+  fi
+fi
+
+escape_for_json() {
+  local s="$1"
+  s="${s//\\/\\\\}"; s="${s//\"/\\\"}"; s="${s//$'\n'/\\n}"
+  s="${s//$'\r'/\\r}"; s="${s//$'\t'/\\t}"
+  printf '%s' "$s"
+}
+
+SKILL_ESC=$(escape_for_json "$SKILL_CONTENT")
+EXTRA_ESC=$(escape_for_json "${SPEC_SUMMARY}${BRIDGE_STATUS}")
+CONTEXT="<analog-agents>\n${SKILL_ESC}\n${EXTRA_ESC}\n</analog-agents>"
+
+if [ -n "${CURSOR_PLUGIN_ROOT:-}" ]; then
+  printf '{"additional_context": "%s"}\n' "$(escape_for_json "$CONTEXT")"
+elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -z "${COPILOT_CLI:-}" ]; then
+  printf '{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "%s"}}\n' \
+    "$(escape_for_json "$CONTEXT")"
+else
+  printf '{"additionalContext": "%s"}\n' "$(escape_for_json "$CONTEXT")"
+fi

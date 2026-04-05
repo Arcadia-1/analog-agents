@@ -1,0 +1,13 @@
+# Real server credentials — never commit
+config/servers.yml
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Simulation outputs
+*.raw/
+sim-log.yml
+margin-report.md
+spectre.out

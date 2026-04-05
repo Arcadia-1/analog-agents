@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/session-start\"",
+            "async": false
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "spectre|virtuoso-bridge",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/post-sim.sh\"",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'f=\"${TOOL_INPUT_FILE_PATH:-}\"; [[ \"$f\" =~ \\.(scs|sp|net)$ ]] && echo \"{\\\"decision\\\":\\\"warn\\\",\\\"reason\\\":\\\"Verifier role: netlist files are read-only. Only the designer agent should modify .scs/.sp/.net files.\\\"}\" || true'",
+            "async": false
+          }
+        ]
+      }
+    ]
+  }
+}
