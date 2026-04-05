@@ -16,10 +16,10 @@
 </p>
 
 <p align="center">
-  <!-- Platforms -->
-  <a href="https://claude.ai/code"><img src="https://img.shields.io/badge/Claude%20Code-native-blueviolet?style=flat-square&logo=anthropic&logoColor=white" alt="Claude Code"/></a>
-  <a href="https://cursor.sh"><img src="https://img.shields.io/badge/Cursor-compatible-000000?style=flat-square&logo=cursor&logoColor=white" alt="Cursor"/></a>
-  <a href="https://github.com/Arcadia-1/analog-agents"><img src="https://img.shields.io/badge/AI--native-agent%20driven-ff6b35?style=flat-square" alt="AI Native"/></a>
+  <!-- Built for -->
+  <img src="https://img.shields.io/badge/built%20for-agentic%20design-ff6b35?style=flat-square" alt="Built for Agentic Design"/>
+  <img src="https://img.shields.io/badge/works%20with-any%20coding%20agent-blueviolet?style=flat-square" alt="Any Coding Agent"/>
+  <img src="https://img.shields.io/badge/format-skill%20library-64748b?style=flat-square" alt="Skill Library"/>
 </p>
 
 <p align="center">
@@ -42,7 +42,7 @@
 
 ## What Is This?
 
-**analog-agents** is a skill library for Claude Code that brings real analog engineering discipline to AI-assisted circuit design.
+**analog-agents** is an agentic skill framework that brings real analog engineering discipline to AI-assisted circuit design. It works with any coding agent that supports skill files.
 
 Most AI tools treat analog design like software: write some code, run some tests, ship it. That misses everything that makes analog hard — the spec sheet with quantitative targets, the PVT corner matrix, the sizing rationale, the convergence loop between design and simulation, the sign-off gate before tape-out.
 
@@ -162,7 +162,7 @@ Single-server teams: just define a `default` entry and skip `role_mapping`.
 git clone https://github.com/Arcadia-1/analog-agents.git
 ```
 
-**2. Register the skill with Claude Code**
+**2. Register the skill with your coding agent**
 
 ```bash
 ln -s /path/to/analog-agents/skills/analog-agents ~/.claude/skills/analog-agents
@@ -189,7 +189,7 @@ specs:
 EOF
 ```
 
-**5. Invoke in Claude Code**
+**5. Invoke the skill**
 
 ```
 Use the analog-agents skill. Design an OTA for spec.yml.
@@ -206,7 +206,7 @@ analog-agents/
 ├── config/
 │   └── servers.example.yml       # Multi-server config template
 ├── hooks/
-│   ├── hooks.json                # Claude Code hook registration
+│   ├── hooks.json                # Hook event registration
 │   ├── session-start             # Inject skill + check bridge + read spec on startup
 │   ├── post-sim.sh               # Triggered after every Spectre run
 │   └── post_sim_check.py         # PSF parser → spec checker → sim-log writer
