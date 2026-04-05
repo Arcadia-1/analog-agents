@@ -25,7 +25,7 @@
 <p align="center">
   <!-- Tech stack -->
   <img src="https://img.shields.io/badge/Spectre-simulator-1e3a5f?style=flat-square&logo=cadence&logoColor=white" alt="Spectre"/>
-  <img src="https://img.shields.io/badge/Virtuoso-layout%20%26%20schematic-0057a8?style=flat-square" alt="Virtuoso"/>
+  <img src="https://img.shields.io/badge/Virtuoso-schematic-0057a8?style=flat-square" alt="Virtuoso"/>
   <img src="https://img.shields.io/badge/Python-3.9%2B-3776ab?style=flat-square&logo=python&logoColor=white" alt="Python"/>
   <img src="https://img.shields.io/badge/SPICE%2FSpectre-netlist-orange?style=flat-square" alt="SPICE Netlist"/>
   <img src="https://img.shields.io/badge/PVT-corner%20aware-9b59b6?style=flat-square" alt="PVT Corners"/>
@@ -232,7 +232,7 @@ analog-agents orchestrates workflow. For domain knowledge:
 | Skill | What It Does |
 |-------|-------------|
 | `spectre` | Run Spectre simulations from a netlist file |
-| `virtuoso` | Cadence Virtuoso schematic and layout via virtuoso-bridge |
+| `virtuoso` | Cadence Virtuoso schematic operations via virtuoso-bridge |
 | `veriloga` | Write Verilog-A behavioral models |
 | `sar-adc` | SAR ADC architecture, design, and budgeting |
 | `optimizer` | Bayesian optimization of circuit parameters |
