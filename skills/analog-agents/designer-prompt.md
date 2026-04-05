@@ -33,6 +33,7 @@ For every iteration, produce:
 - Must be self-contained: include all subcircuits, model includes, supply sources
 - Add a `.op` analysis so the verifier can check operating point on L1
 - Parameterize key sizings as `.param` statements at the top for easy iteration
+- If the netlist was exported from Virtuoso and contains verbose MOSFET parasitic parameters (`sd=`, `ad=`, `as=`, `pd=`, `ps=`, `nrd=`, `nrs=`, etc.), clean them first — keep only `l=`, `w=`, `multi=`, `nf=` for readability
 
 Example netlist header:
 ```spice
