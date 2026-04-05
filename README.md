@@ -11,7 +11,7 @@
   <!-- GitHub -->
   <a href="https://github.com/Arcadia-1/analog-agents/stargazers"><img src="https://img.shields.io/github/stars/Arcadia-1/analog-agents?style=flat-square&logo=github&color=f5c542" alt="GitHub Stars"/></a>
   <a href="https://github.com/Arcadia-1/analog-agents/network/members"><img src="https://img.shields.io/github/forks/Arcadia-1/analog-agents?style=flat-square&logo=github&color=8b949e" alt="GitHub Forks"/></a>
-  <a href="https://github.com/Arcadia-1/analog-agents/issues"><img src="https://img.shields.io/github/issues/Arcadia-1/analog-agents?style=flat-square&logo=github&color=f85149" alt="Open Issues"/></a>
+  <a href="https://github.com/Arcadia-1/analog-agents/issues"><img src="https://img.shields.io/github/issues/Arcadia-1/analog-agents?style=flat-square&logo=github&color=3fb950" alt="Open Issues"/></a>
   <a href="https://github.com/Arcadia-1/analog-agents/commits/main"><img src="https://img.shields.io/github/last-commit/Arcadia-1/analog-agents?style=flat-square&logo=git&color=3fb950" alt="Last Commit"/></a>
 </p>
 
