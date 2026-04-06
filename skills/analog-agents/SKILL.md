@@ -2,7 +2,7 @@
 name: analog-agents
 description: >
   AI-native analog frontend design collaboration. Invoke when designing an analog
-  circuit block end-to-end: spec → architecture → netlist → simulation → tape-out.
+  circuit block end-to-end: spec → architecture → netlist → simulation → Virtuoso delivery.
   Dispatches librarian, architect, designer, and verifier agents with defined roles,
   convergence loop, and sign-off gate.
 ---
@@ -13,7 +13,7 @@ Four-agent analog design framework. A **librarian** surveys existing Virtuoso li
 to understand available circuits; an **architect** decomposes the system and validates
 the architecture with behavioral models; a **designer** produces transistor-level netlists;
 a **verifier** reviews and simulates them against specs. They iterate until all specs pass,
-then the designer tapes out to Virtuoso.
+then the designer migrates the netlist to Virtuoso.
 
 ## When to Use
 
@@ -21,7 +21,7 @@ Use this skill when:
 - Starting a new analog circuit block from a top-level spec
 - Designing a complex block that requires sub-block decomposition (ADC, PLL, etc.)
 - Iterating on an existing netlist that is failing specs
-- Preparing a verified netlist for Virtuoso migration (tape-out)
+- Preparing a verified netlist for Virtuoso migration
 
 Do NOT use for:
 - Pure simulation tasks on an existing verified netlist → use `spectre` skill directly
@@ -32,10 +32,29 @@ Do NOT use for:
 
 Before invoking any agent, confirm these exist:
 
-1. **`spec.yml`** in the working directory (see spec format below)
+1. **`spec.yml`** in the working directory (see spec format below) — OR use functional defaults
 2. `servers.yml` configured (copy from `config/servers.example.yml` and fill in)
 
-If `spec.yml` is missing, ask the user to define it first. Do not proceed without specs.
+### No spec.yml? Use functional defaults
+
+If `spec.yml` is missing or the user just wants the circuit to "work", do NOT block
+on creating a detailed spec. Instead, auto-generate a minimal `spec.yml` with
+**L1 functional defaults** for that block type:
+
+| Block type | Functional defaults |
+|------------|-------------------|
+| Amplifier/OTA | All transistors in saturation (region ≤ 2), positive DC gain, output CM near target |
+| Comparator | Correct polarity output for positive/negative differential input |
+| ADC | Correct digital codes for ramp input |
+| Oscillator | Oscillation at roughly target frequency |
+| Any block | DC operating point converges, no rail-stuck nodes, current balance at fold/mirror nodes |
+
+The auto-generated spec uses the process nominal supply (e.g., 0.9V for 28nm, 1.1V for
+65nm, 1.8V for 180nm) and only L1 functional checks. The orchestrator proceeds
+immediately — no user confirmation needed for functional defaults.
+
+When the user later provides quantitative targets (gain ≥ 60dB, UGBW ≥ 500MHz, etc.),
+upgrade to a full `spec.yml` with L2/L3 specs.
 
 ## Spec Sheet Format
 
@@ -99,7 +118,7 @@ top-level spec.yml
   sign-off gate ──► L3 PVT required
         │
         ▼
-  designer agent: tape-out → Virtuoso
+  designer agent: migrate to Virtuoso
 ```
 
 ## Agent Dispatch Rules
@@ -230,14 +249,14 @@ revises constraints, and sends the affected sub-block back to designer→verifie
 
 ### Step 5 — Sign-off gate
 
-Before tape-out, verifier MUST complete L3 PVT on the integrated design:
+Before Virtuoso delivery, verifier MUST complete L3 PVT on the integrated design:
 - Dispatch verifier with level: L3
 - All specs must pass across all corners
 - If any corner fails, return to designer (or architect if it's architectural)
 
-### Step 6 — Tape-out
+### Step 6 — Virtuoso Migration
 
-Dispatch designer with tape-out instruction:
+Dispatch designer with Virtuoso migration instruction:
 - Input: verified integrated netlist path
 - Action: migrate netlist to Virtuoso cellview + run LVS
 - Server: `role_mapping.designer` (designer has Virtuoso write access)
@@ -258,7 +277,7 @@ The orchestrator may skip architect entirely for trivial blocks if the user agre
 |-------|------|---------|---------|
 | **L1 Functional** | default, every iteration | TT 27°C nominal | Does the circuit perform its basic function? |
 | **L2 Performance** | when L1 passes, before claiming convergence | TT 27°C nominal | Do all specs meet targets at typical? |
-| **L3 Robustness** | mandatory before tape-out | Full corner matrix from spec.yml | Do specs hold across all PVT corners? |
+| **L3 Robustness** | mandatory before delivery | Full corner matrix from spec.yml | Do specs hold across all PVT corners? |
 
 ### L1 — Functional Verification
 

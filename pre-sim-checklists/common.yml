@@ -1,0 +1,84 @@
+# ============================================================
+# Common Pre-Simulation Checklist
+# Applies to ALL analog circuits before running Spectre
+# ============================================================
+# severity: error (block simulation), warn (flag but proceed)
+# method:
+#   structural — parseable from netlist text (mirror ratios, connections, sizing)
+#   estimate   — computable from netlist + process assumptions (Vth~0.3V, Vdsat~0.1V)
+#   semantic   — needs design-intent reasoning (feedback polarity, compensation)
+
+floating_nodes:
+  description: "Every net must have at least one DC path to a supply or ground"
+  method: structural
+  severity: error
+  how: >
+    For each net in the subcircuit, check that it connects to at least
+    2 device terminals. A net with only 1 connection is dangling.
+    Exception: subcircuit ports (connected externally).
+
+bulk_connections:
+  description: "PMOS bulk → VDD (or source), NMOS bulk → VSS"
+  method: structural
+  severity: error
+  how: >
+    Parse each MOSFET instance. 4th terminal is bulk.
+    PMOS (pch_*): must be VDD or the source net.
+    NMOS (nch_*): must be VSS or 0 or the source net.
+    Wrong bulk = wrong Vth, possible latchup.
+
+mirror_ratio_vs_comment:
+  description: "Actual W*nf ratio matches the intended current ratio in comments"
+  method: structural
+  severity: error
+  how: >
+    Identify mirror pairs: devices sharing the same gate net and same type.
+    Compute ratio = (W*nf)_mirror / (W*nf)_ref.
+    Compare against any current ratio stated in comments.
+    Flag if mismatch > 5%.
+
+supply_connections:
+  description: "VDD and VSS actually connect to the top-level ports"
+  method: structural
+  severity: error
+  how: >
+    Verify subcircuit has VDD and VSS (or equivalent) in port list.
+    Every device needing supply is connected to these nets, not to
+    a similarly-named but disconnected internal net.
+
+parameter_sanity:
+  description: "No zero-width, zero-length, or negative device parameters"
+  method: structural
+  severity: error
+  how: >
+    For every MOSFET: W > 0, L > min_L (process dependent).
+    For every R: r > 0. For every C: c >= 0.
+    nf (number of fingers) must be positive integer.
+
+bias_source_exists:
+  description: "Every bias net has a DC path to a current or voltage source"
+  method: structural
+  severity: error
+  how: >
+    Trace each gate net of current-source MOSFETs back to either:
+    (a) a diode-connected device with a current source, or
+    (b) a voltage source.
+    A floating gate = random bias = nothing works.
+
+dc_path_to_output:
+  description: "Output nodes have a DC path to both VDD and VSS"
+  method: structural
+  severity: error
+  how: >
+    From each output port, trace through devices (on-resistance)
+    to VDD and to VSS. If either path is missing, the output
+    will rail or float.
+
+testbench_pin_match:
+  description: "Testbench instantiation matches subcircuit port order"
+  method: structural
+  severity: error
+  how: >
+    Compare the subcircuit definition port list with the testbench
+    instantiation. Positional mismatch = swapped signals.
+    Named connections are safer but verify names match.

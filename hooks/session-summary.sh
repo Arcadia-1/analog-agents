@@ -76,7 +76,7 @@ ${MODIFIED_FILES}
 <!-- Auto-generated. Edit manually if needed. -->
 - [ ] Review margin-report.md for failing specs
 - [ ] If all specs pass at L2: run L3 PVT verification
-- [ ] If L3 passes: tape-out to Virtuoso
+- [ ] If L3 passes: migrate to Virtuoso
 EOF
 
 echo "{\"additionalContext\": \"[analog-agents] Session summary written to ${SUMMARY_FILE}\"}"

@@ -1,0 +1,79 @@
+# ============================================================
+# Amplifier Pre-Simulation Checklist
+# Applies to: OTA, opamp, any gain stage
+# ============================================================
+
+gain_path_continuity:
+  description: "Signal path from input to output must be continuous"
+  method: structural
+  severity: error
+  how: >
+    Trace: input gate → drain (gain node) → [cascode] → output.
+    Every node in the chain must connect to the next stage.
+    A broken chain = zero gain.
+
+input_pair_type_vs_vcm:
+  description: "Input pair type must be compatible with input common-mode"
+  method: estimate
+  severity: error
+  how: >
+    PMOS input pair: needs Vcm LOW enough so that
+      VDD - |Vsg_input| - |Vdsat_tail| > 0  →  Vcm < VDD - |Vsg| - |Vdsat|
+    NMOS input pair: needs Vcm HIGH enough so that
+      Vcm - Vgs_input - Vdsat_tail > 0  →  Vcm > Vgs + Vdsat
+    Rule of thumb:
+      PMOS input → Vcm near VSS (0 ~ 0.3*VDD)
+      NMOS input → Vcm near VDD (0.7*VDD ~ VDD)
+    GETTING THIS WRONG IS THE #1 CAUSE OF "AMPLIFIER DOESN'T WORK".
+
+tail_headroom:
+  description: "Tail current source must have enough Vds to stay in saturation"
+  method: estimate
+  severity: error
+  how: >
+    For PMOS tail (above PMOS input pair):
+      |Vds_tail| = VDD - V_source_of_input_pair
+      V_source = Vcm + |Vsg|  (PMOS: source is above gate)
+      Need: |Vds_tail| >= |Vdsat_tail| (~100-150mV for strong inversion)
+      So: VDD - Vcm - |Vsg| >= |Vdsat|
+    For NMOS tail (below NMOS input pair):
+      Vds_tail = V_source_of_input_pair
+      V_source = Vcm - Vgs
+      Need: Vcm - Vgs >= Vdsat
+    Estimate Vgs ~ 0.3-0.5V for 28nm ulvt, Vdsat ~ 0.1-0.2V.
+
+cascode_bias_voltage:
+  description: "Cascode gate bias must keep both stacked devices in saturation"
+  method: estimate
+  severity: warn
+  how: >
+    NMOS cascode (M_cas on top of M_cs):
+      Vg_cas should be ~ Vgs + Vdsat above VSS
+      So that M_cs has Vds = Vg_cas - Vgs_cas >= Vdsat_cs
+      And M_cas has enough Vds too.
+    PMOS cascode:
+      Vg_cas should be ~ VDD - |Vsg| - |Vdsat|
+    If bias comes from a separate chain, the W/L should match
+    (or be ratioed intentionally) to track Vth.
+
+output_headroom_stack:
+  description: "Total Vdsat stack must fit within output swing"
+  method: estimate
+  severity: warn
+  how: >
+    At the output node, count Vdsat drops from VDD to output
+    and from output to VSS:
+      VDD side: Vdsat_pmos_cs + Vdsat_pmos_cas (if cascode)
+      VSS side: Vdsat_nmos_cs + Vdsat_nmos_cas (if cascode)
+    Output swing = VDD - sum_of_all_Vdsats
+    For 0.9V supply with double-cascode: need 4 × ~100mV = 400mV
+    Leaving only 500mV swing. Tight but doable.
+
+compensation:
+  description: "Multi-stage amplifiers need frequency compensation"
+  method: semantic
+  severity: warn
+  how: >
+    Single-stage (e.g., folded cascode): load cap is compensation.
+    Two-stage (e.g., with output buffer): needs Miller cap or other.
+    Check that compensation elements exist for the topology.

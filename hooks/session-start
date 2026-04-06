@@ -22,7 +22,7 @@ if command -v virtuoso-bridge &>/dev/null; then
   if virtuoso-bridge status &>/dev/null 2>&1; then
     BRIDGE_STATUS="\n<analog-agents-context>virtuoso-bridge: ONLINE</analog-agents-context>"
   else
-    BRIDGE_STATUS="\n<analog-agents-context>virtuoso-bridge: OFFLINE — run 'virtuoso-bridge start' before tape-out</analog-agents-context>"
+    BRIDGE_STATUS="\n<analog-agents-context>virtuoso-bridge: OFFLINE — run 'virtuoso-bridge start' before Virtuoso migration</analog-agents-context>"
   fi
 fi
 

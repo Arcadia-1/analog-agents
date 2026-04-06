@@ -99,16 +99,25 @@ Typically includes:
 Every verification **must** save and report these parameters for every MOSFET:
 
 ```
-save I0.M1:ids I0.M1:vgs I0.M1:vds I0.M1:gm I0.M1:gds I0.M1:gmoverid I0.M1:region
+save I0.M1:ids I0.M1:vgs I0.M1:vds I0.M1:gm I0.M1:gds I0.M1:gmoverid I0.M1:region I0.M1:fug
 ```
 
-Report as a table in margin-report.md:
+**Required columns** (in this exact order):
 
-| Device | Role | Id (uA) | Vgs (V) | Vds (V) | gm (mS) | gds (uS) | gm/Id | Region |
-|--------|------|---------|---------|---------|---------|----------|-------|--------|
+| Device | Role | Region | gm/Id | gm (mS) | gds (uS) | self-gain | ft (GHz) | Id (uA) | Vds (V) |
+|--------|------|--------|-------|---------|----------|-----------|----------|---------|---------|
 
-Red flags: region=0 (cutoff) or 1 (linear) on signal path, gm/Id >25 or <5,
-|Vds| < 50mV on devices expected in saturation.
+Where:
+- **self-gain** = gm/gds (intrinsic gain of that single transistor, dimensionless)
+- **ft** = gm/(2π·Cgg) — use `fug` from Spectre if available, otherwise estimate from `gm` and `cgg`
+- Report Id as absolute value in μA
+- Region: sat / subth / linear / off
+
+Red flags:
+- region = linear or off on signal-path transistors
+- gm/Id > 25 or < 5
+- |Vds| < 50mV on devices expected in saturation
+- self-gain < 5 on cascode or current-source devices
 
 #### Fully Differential PSRR/CMRR
 
@@ -138,9 +147,9 @@ Execute L2 for every corner in the verification plan. Use parallel simulation
 
 ## MOSFET Operating Points
 
-| Device | Role | Id (uA) | Vgs (V) | Vds (V) | gm (mS) | gds (uS) | gm/Id | Region |
-|--------|------|---------|---------|---------|---------|----------|-------|--------|
-| M1 | input NMOS | 37.6 | 0.302 | 0.472 | 0.785 | 41.8 | 20.9 | sat |
+| Device | Role | Region | gm/Id | gm (mS) | gds (uS) | self-gain | ft (GHz) | Id (uA) | Vds (V) |
+|--------|------|--------|-------|---------|----------|-----------|----------|---------|---------|
+| M1 | input NMOS | sat | 20.9 | 0.785 | 41.8 | 18.8 | 8.5 | 37.6 | 0.472 |
 
 ## Results
 

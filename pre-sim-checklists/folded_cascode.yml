@@ -1,0 +1,99 @@
+# ============================================================
+# Folded-Cascode Topology Pre-Simulation Checklist
+# Applies to: single-stage folded-cascode OTA (PMOS or NMOS input)
+# ============================================================
+
+fold_node_kcl:
+  description: "Current balance at the fold node: I_fold_CS = I_input/2 + I_output"
+  method: structural
+  severity: error
+  how: >
+    Identify the fold node (where input pair drain meets fold CS drain
+    and cascode source).
+    Compute from mirror ratios:
+      I_tail = (W*nf)_tail / (W*nf)_ref × Ibias
+      I_fold = (W*nf)_fold_cs / (W*nf)_ref × Ibias
+      I_input_per_side = I_tail / 2
+      I_output = I_fold - I_input_per_side
+    Check:
+      I_output > 0 (otherwise cascode has no current)
+      I_output is reasonable (not < 10% of I_fold)
+    Common mistake: comments say one ratio, W/nf says another.
+
+fold_cs_vs_tail_current:
+  description: "Fold CS current must exceed half the tail current"
+  method: structural
+  severity: error
+  how: >
+    I_fold > I_tail/2 is required, otherwise I_output goes negative
+    (physically: the fold CS cannot sink all the input current,
+    and the cascode/load branch has zero or reverse current).
+    Recommend I_fold >= 1.5 × I_tail/2 for margin.
+
+input_vcm_headroom:
+  description: "Input CM must leave room for tail current source"
+  method: estimate
+  severity: error
+  how: >
+    THIS IS THE MOST COMMON FOLDED-CASCODE FAILURE MODE.
+
+    PMOS input (tail is PMOS between VDD and input source):
+      Headroom = VDD - Vcm - |Vsg_input| - |Vdsat_tail|
+      Vcm = 0.45V, VDD = 0.9V → only 0.45V for |Vsg| + |Vdsat|
+      With |Vsg| ~ 0.35V (28nm ulvt) → only 0.1V for tail → MARGINAL
+      Fix: lower Vcm to 0.2-0.3V, OR use NMOS input pair
+
+    NMOS input (tail is NMOS between VSS and input source):
+      Headroom = Vcm - Vgs_input - Vdsat_tail
+      Needs Vcm high enough (> Vgs + Vdsat ~ 0.5V)
+
+    Quick rule: PMOS input → Vcm < 0.3 × VDD
+                NMOS input → Vcm > 0.7 × VDD
+                (or use complementary input for rail-to-rail)
+
+cascode_headroom_nmos:
+  description: "NMOS cascode + CS stack fits below fold node"
+  method: estimate
+  severity: warn
+  how: >
+    Fold node voltage (PMOS input case):
+      V_fold ~ Vcm + |Vsg_input|  (drain of input PMOS)
+      But also V_fold = Vds_cs + Vds_cas (from VSS side)
+    Need: Vdsat_cs + Vdsat_cas < V_fold
+    With V_fold ~ 0.5-0.7V and Vdsat ~ 0.1V each → OK.
+    But if V_fold is pulled too low (tail collapsed), no room.
+
+cascode_headroom_pmos:
+  description: "PMOS cascode + load stack fits above output node"
+  method: estimate
+  severity: warn
+  how: >
+    From VDD down: |Vdsat_top| + |Vdsat_cas|
+    Output must be above: VSS + Vdsat_nmos_cs + Vdsat_nmos_cas
+    Output must be below: VDD - |Vdsat_pmos_top| - |Vdsat_pmos_cas|
+    Effective output swing ~ VDD - 4×Vdsat (double cascode both sides)
+
+pmos_load_topology:
+  description: "PMOS load: is it current source or cascode? Check gate connection"
+  method: semantic
+  severity: warn
+  how: >
+    Common confusion:
+    - Current source: gate to fixed bias → sets I_output independently
+    - Cascode: gate to bias, but current set by what flows through it
+    In folded cascode, the PMOS load current = I_output = I_fold - I_tail/2.
+    The load does NOT independently set current — it must accommodate
+    whatever the fold branch provides.
+    If CMFB controls the load gate, it adjusts output CM by modulating
+    the effective load impedance/current.
+    Check: CMFB controls which PMOS gate? Top cascode or bottom CS?
+
+bias_chain_tracking:
+  description: "Cascode bias devices should track signal-path devices"
+  method: semantic
+  severity: warn
+  how: >
+    The cascode bias chain (diode-stack generating VBN2, VBP3)
+    should use the same device flavor (ulvt/lvt/svt) and similar
+    L as the signal-path cascodes. Otherwise Vth mismatch causes
+    the bias to be wrong for the signal path.

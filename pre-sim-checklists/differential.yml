@@ -1,0 +1,75 @@
+# ============================================================
+# Differential Circuit Pre-Simulation Checklist
+# Applies to: any fully-differential or pseudo-differential circuit
+# ============================================================
+
+symmetry:
+  description: "Differential half-circuits must have identical device sizing"
+  method: structural
+  severity: error
+  how: >
+    Identify diff pairs by topology (shared source/tail).
+    For each pair (M1/M2, M3/M4, etc.), verify:
+    W, L, nf, multi are identical.
+    Also check load pairs and cascode pairs.
+
+cmfb_exists:
+  description: "Fully-differential circuit must have CMFB"
+  method: structural
+  severity: error
+  how: >
+    A fully-differential output without CMFB has undefined output CM.
+    Check for either:
+    (a) resistive/capacitive CM sensing network, or
+    (b) switched-capacitor CMFB, or
+    (c) ideal vcvs CMFB (for initial debug only).
+
+cmfb_polarity:
+  description: "CMFB must have negative feedback polarity"
+  method: semantic
+  severity: error
+  how: >
+    Trace the CMFB loop:
+    1. Output CM rises →
+    2. CM sense voltage rises →
+    3. Error amp output changes →
+    4. Controlled device (load CS gate) adjusts →
+    5. Output CM should DECREASE (negative feedback).
+    If step 5 increases CM → positive feedback → circuit latches.
+
+cmfb_sensing_balance:
+  description: "CM sensing resistors/caps must be equal on both outputs"
+  method: structural
+  severity: warn
+  how: >
+    Rcm1 == Rcm2, Ccm1 == Ccm2.
+    Mismatch converts differential signal to CM error.
+
+cmfb_error_amp_bias:
+  description: "CMFB error amplifier must have its own valid bias point"
+  method: semantic
+  severity: error
+  how: >
+    The CMFB error amp tail current source needs a valid gate bias.
+    If it shares the same bias as the main path, check that the
+    bias is established before the CMFB loop closes.
+    A railed CMFB tail (< 10mV Vds) = CMFB is dead.
+
+cm_reference_source:
+  description: "CMFB reference voltage must be explicitly defined"
+  method: structural
+  severity: error
+  how: >
+    There must be a voltage source or bias network setting the
+    target output CM. Check that Vcmref exists and is connected
+    to the correct error amp input.
+
+output_cm_vs_input_cm:
+  description: "Output CM and input CM may need to be different"
+  method: semantic
+  severity: warn
+  how: >
+    For PMOS input: output CM can be near VDD/2.
+    For NMOS input: output CM can be near VDD/2.
+    But if input CM = output CM is assumed, verify the topology supports it.
+    Folded cascode allows independent input/output CM.
