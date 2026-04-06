@@ -118,6 +118,16 @@ library. Read the virtuoso skill first to understand the API levels and patterns
 Do NOT try to access Virtuoso through raw SSH commands or custom scripts.
 The virtuoso-bridge handles connection management, file transfer, and error handling.
 
+**IMPORTANT: Before writing any Virtuoso interaction code, check the existing examples
+in `virtuoso-bridge-lite/examples/01_virtuoso/` first.** These cover listing libraries,
+reading schematics, reading connectivity, reading instance parameters, CDL import,
+screenshot capture, and more. Use them as a basis — do not reinvent from scratch.
+Key examples for librarian work:
+- `examples/01_virtuoso/basic/03_list_library_cells.py` — list libraries and cells
+- `examples/01_virtuoso/schematic/02_read_connectivity.py` — read instance connections
+- `examples/01_virtuoso/schematic/03_read_instance_params.py` — read CDF parameters
+- `examples/01_virtuoso/schematic/08_import_cdl_cap_array.py` — CDL import via spiceIn
+
 ## How to Survey a Library
 
 ### Step 1 — List all cells and views
