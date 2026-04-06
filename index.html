@@ -181,15 +181,22 @@ footer a{color:var(--accent)}
 <section class="hero">
   <div class="hero-badge">Agentic Skill Framework for Analog IC Design</div>
   <h1>analog<span>-agents</span></h1>
-  <p>Three AI agents collaborate on your analog front-end &mdash; one architects, one designs, one verifies. They converge on specs until every schematic is verified.</p>
+  <p>Four AI agents collaborate on your analog front-end &mdash; one surveys, one architects, one designs, one verifies. They converge on specs until every schematic is verified.</p>
 
-  <!-- Agent trio preview -->
+  <!-- Agent quartet preview -->
   <div style="display:flex;gap:1.2rem;margin-top:2.5rem;flex-wrap:wrap;justify-content:center;animation:fadeDown 0.8s ease 0.25s both">
+    <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:999px">
+      <span style="font-size:1.3rem">&#x1f4da;</span>
+      <div style="text-align:left">
+        <div style="font-weight:700;font-size:0.95rem;color:#10b981">Librarian</div>
+        <div style="font-size:0.75rem;color:var(--text3)">Survey &bull; Understand &bull; Manage</div>
+      </div>
+    </div>
     <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(232,121,249,0.08);border:1px solid rgba(232,121,249,0.2);border-radius:999px">
       <span style="font-size:1.3rem">&#x1f3d7;</span>
       <div style="text-align:left">
         <div style="font-weight:700;font-size:0.95rem;color:var(--architect)">Architect</div>
-        <div style="font-size:0.75rem;color:var(--text3)">Decompose &bull; Budget &bull; Validate</div>
+        <div style="font-size:0.75rem;color:var(--text3)">Decompose &bull; Testbench &bull; Validate</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:999px">
@@ -221,26 +228,45 @@ footer a{color:var(--accent)}
 <section id="agents">
   <div class="container">
     <div class="section-label">Meet the Agents</div>
-    <div class="section-title">Three Roles. Clear Boundaries.</div>
+    <div class="section-title">Four Roles. Clear Boundaries.</div>
     <div class="section-subtitle">Each agent has strict permissions and a defined communication style. No overlap, no ambiguity.</div>
 
     <div class="agents-grid">
+      <div class="agent-card" style="border-top:none;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#10b981,transparent)"></div>
+        <div class="agent-icon" style="background:rgba(16,185,129,0.12)">&#x1f4da;</div>
+        <h3>Librarian</h3>
+        <p class="agent-tagline">Surveys Virtuoso libraries. Understands existing circuits. Manages cellviews.</p>
+        <ul class="agent-perms">
+          <li style="--dot-color:#10b981">Scans libraries, exports netlists, identifies topologies</li>
+          <li style="--dot-color:#10b981">Assesses reusability against current project specs</li>
+          <li style="--dot-color:#10b981">Creates/updates schematics and parameters in Virtuoso</li>
+          <li style="--dot-color:#10b981">Runs in background &mdash; parallel with architect</li>
+          <li style="--dot-color:#10b981">Uses virtuoso-bridge for all Virtuoso operations</li>
+        </ul>
+        <div class="comm-style">
+          <h4>Communication Style</h4>
+          <div class="comm-quote" style="border-color:#10b981;background:rgba(16,185,129,0.04)">"ota_fc: folded cascode, W_in=5u, Ibias=100u &mdash; reusable with resizing"</div>
+          <div class="comm-quote" style="border-color:#10b981;background:rgba(16,185,129,0.04)">"cmp_sa uses thin-oxide &mdash; check if target process supports them"</div>
+        </div>
+      </div>
+
       <div class="agent-card architect-card">
         <div class="agent-icon">&#x1f3d7;</div>
         <h3>Architect</h3>
-        <p class="agent-tagline">Owns the system. Decomposes, budgets, validates, integrates.</p>
+        <p class="agent-tagline">Owns the system architecture and all testbenches.</p>
         <ul class="agent-perms">
           <li>Selects architecture with tradeoff analysis</li>
           <li>Decomposes into sub-blocks, derives specs &amp; budgets</li>
           <li>Builds Verilog-A behavioral models for validation</li>
+          <li>Writes all testbenches &mdash; designer does not write testbenches</li>
           <li>Defines verification plans &mdash; what to verify and how</li>
-          <li>Audits verification conditions before reading numbers</li>
           <li>Integrates verified sub-blocks at system level</li>
         </ul>
         <div class="comm-style">
           <h4>Communication Style</h4>
           <div class="comm-quote">"ENOB budget: 0.3 bit comparator noise, 0.2 bit DAC INL, 0.1 bit jitter &rarr; 7.9 available vs 7.5 required"</div>
-          <div class="comm-quote">"PSRR testbench missing supply modulation &mdash; redo before evaluating numbers"</div>
+          <div class="comm-quote">"PSRR testbench: AC on VDD, inputs biased at Vcm, CL=1pF on output"</div>
         </div>
       </div>
 
@@ -265,18 +291,18 @@ footer a{color:var(--accent)}
       <div class="agent-card verifier-card">
         <div class="agent-icon">&#x1f52c;</div>
         <h3>Verifier</h3>
-        <p class="agent-tagline">Executes the verification plan. Never touches the netlist. Always quantifies.</p>
+        <p class="agent-tagline">Reviews before simulating. Never touches the netlist. Always quantifies.</p>
         <ul class="agent-perms">
-          <li>Follows architect's verification plan exactly</li>
-          <li>Writes testbench, runs Spectre, writes margin-report.md</li>
-          <li>Documents verification conditions alongside results</li>
-          <li>Reports margin per spec per corner &mdash; never just pass/fail</li>
-          <li>Never modifies the designer's netlist</li>
+          <li>Reviews circuit netlist AND testbench before simulating</li>
+          <li>Rejects bad setups &mdash; saves simulation time</li>
+          <li>Runs Spectre, writes margin-report.md with quantified margins</li>
+          <li>Routes issues: circuit problem &rarr; designer, testbench problem &rarr; architect</li>
+          <li>Never modifies circuit netlist or testbench</li>
         </ul>
         <div class="comm-style">
           <h4>Communication Style</h4>
           <div class="comm-quote">"phase_margin: measured 41.2&deg;, target &ge;45&deg;, short by 3.8&deg; at SS/125&deg;C"</div>
-          <div class="comm-quote">"STB probe at loop break, Middlebrook method, output loaded with 1pF&Vert;10k&Omega;"</div>
+          <div class="comm-quote">"REJECT: PSRR testbench applies AC to input, not VDD &mdash; routing to architect"</div>
         </div>
       </div>
     </div>
@@ -301,10 +327,19 @@ footer a{color:var(--accent)}
       <div class="wf-arrow"></div>
 
       <div class="wf-step" data-anim>
+        <div class="wf-num" style="background:rgba(16,185,129,0.15);color:#10b981">L</div>
+        <div class="wf-content">
+          <h3>Librarian (background, optional)</h3>
+          <p>Scan existing Virtuoso library, identify topologies, assess reusable blocks. Runs in parallel with architect.</p>
+        </div>
+      </div>
+      <div class="wf-arrow"></div>
+
+      <div class="wf-step" data-anim>
         <div class="wf-num architect">A</div>
         <div class="wf-content">
           <h3>Architect: Decompose</h3>
-          <p>Select architecture, decompose into sub-blocks, derive specs, allocate budgets, define verification plans.</p>
+          <p>Select architecture, decompose into sub-blocks, derive specs, allocate budgets, write testbenches + verification plans.</p>
         </div>
       </div>
       <div class="wf-arrow"></div>
@@ -331,16 +366,16 @@ footer a{color:var(--accent)}
         <div class="wf-num verifier">V</div>
         <div class="wf-content">
           <h3>Verifier Agent</h3>
-          <p>Executes architect's verification plan. Reports verification conditions + margin per spec per corner.</p>
+          <p>Reviews circuit + testbench first. If both OK, runs Spectre. If not, rejects and routes feedback.</p>
         </div>
       </div>
       <div class="wf-arrow"></div>
 
       <div class="wf-step" data-anim>
-        <div class="wf-num architect">A</div>
+        <div class="wf-num" style="background:rgba(239,68,68,0.12);color:var(--fail)">?</div>
         <div class="wf-content">
-          <h3>Architect Reviews</h3>
-          <p>Audits verification conditions first (testbench correct?), then evaluates spec numbers. Wrong setup &rarr; redo.</p>
+          <h3>Convergence Check</h3>
+          <p>Verifier rejected? Route to designer or architect. All specs pass? Converged. Fail? Designer revises.</p>
         </div>
       </div>
 
@@ -392,9 +427,14 @@ footer a{color:var(--accent)}
         <p>Quantitative targets + corner definitions</p>
       </div>
       <div class="handoff-arrow">&rarr;</div>
+      <div class="handoff-card" style="border-color:rgba(16,185,129,0.3)">
+        <h4>&#x1f4da; Librarian</h4>
+        <p>Returns: survey-report.md + library-index.md</p>
+      </div>
+      <div class="handoff-arrow">&rarr;</div>
       <div class="handoff-card" style="border-color:rgba(232,121,249,0.3)">
         <h4>&#x1f3d7; Architect</h4>
-        <p>Returns: architecture.md + budget.md + sub-block specs + verification plans</p>
+        <p>Returns: architecture.md + budget.md + specs + testbenches</p>
       </div>
       <div class="handoff-arrow">&rarr;</div>
       <div class="handoff-card" style="border-color:rgba(245,158,11,0.3)">
@@ -404,7 +444,7 @@ footer a{color:var(--accent)}
       <div class="handoff-arrow">&rarr;</div>
       <div class="handoff-card" style="border-color:rgba(59,130,246,0.3)">
         <h4>&#x1f52c; Verifier</h4>
-        <p>Returns: margin-report.md with conditions + evidence</p>
+        <p>Reviews circuit + testbench, then returns margin-report.md</p>
       </div>
       <div class="handoff-arrow">&rarr;</div>
       <div class="handoff-card" style="border-color:rgba(34,197,94,0.3)">

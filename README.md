@@ -4,7 +4,7 @@
 
 <p align="center">
   <strong>Agentic analog front-end design — spec in, verified schematic out.</strong><br/>
-  Three specialized agents. One convergence loop. Zero ambiguity.
+  Four specialized agents. One convergence loop. Zero ambiguity.
 </p>
 
 <p align="center">
@@ -48,17 +48,21 @@ Most AI tools treat analog design like software: write some code, run some tests
 
 analog-agents doesn't miss any of that.
 
-It dispatches three agents — an **architect**, a **designer**, and a **verifier** — with distinct roles, strict permissions, and defined handoff contracts. The architect decomposes the system and validates the architecture with behavioral models. The designer and verifier iterate on each sub-block until every spec passes with margin. The architect then integrates and verifies at the system level.
+It dispatches four agents — a **librarian**, an **architect**, a **designer**, and a **verifier** — with distinct roles, strict permissions, and defined handoff contracts. The librarian surveys existing Virtuoso libraries. The architect decomposes the system, writes testbenches, and validates the architecture with behavioral models. The designer produces transistor-level netlists. The verifier reviews both the circuit and testbench before simulating. They iterate until every spec passes with margin.
 
 ```
 top-level spec.yml
+        |
+        |-- librarian (background, optional)
+        |     survey existing Virtuoso library
+        |     output: survey-report.md + library-index.md
         |
         v
   architect agent (Phase 1: decompose)
   |-- select architecture, tradeoff analysis
   |-- derive sub-block specs + budget allocation
-  |-- define verification plans
-  |-- output: architecture.md + budget.md + blocks/*/spec.yml
+  |-- write testbenches + verification plans
+  |-- output: architecture.md + budget.md + blocks/*/spec.yml + testbenches
         |
         v
   architect agent (Phase 2: behavioral validation)
@@ -67,17 +71,21 @@ top-level spec.yml
   |-- confirm top-level specs achievable
         |
         v
-  +---------------------------------------------+
-  |  For each sub-block:                        |
-  |                                             |
-  |    designer agent ----> verifier agent      |
-  |         ^                    |              |
-  |         +------ FAIL --------+              |
-  |                                             |
-  |    architect reviews verification results   |
-  |    (audit conditions first, then numbers)   |
-  |    (max 3 iterations per sub-block)         |
-  +---------------------------------------------+
+  +------------------------------------------------------+
+  |  For each sub-block:                                 |
+  |                                                      |
+  |    designer (circuit) + architect (testbench)        |
+  |         |                                            |
+  |         v                                            |
+  |    verifier: review both --> approve? --> simulate   |
+  |         |                       |                    |
+  |         FAIL                 REJECT                  |
+  |         |                (no sim run)                |
+  |         v                    |                       |
+  |    designer revises     architect or designer fixes  |
+  |                                                      |
+  |    (max 3 design iterations per sub-block)           |
+  +------------------------------------------------------+
         |
         v
   architect agent (Phase 3: integration)
@@ -91,22 +99,32 @@ top-level spec.yml
   verified schematic delivered
 ```
 
-## The Three Agents
+## The Four Agents
+
+### Librarian
+Surveys and manages Virtuoso design libraries. Runs in the background.
+
+- Scans Virtuoso libraries, exports netlists, identifies circuit topologies
+- Produces `survey-report.md` (detailed) and `library-index.md` (quick-reference)
+- Assesses reusability of existing blocks against current project specs
+- Can write back to Virtuoso: create schematics from netlists, update parameters
+- Uses `virtuoso-bridge` for all Virtuoso interactions
+- Long-running — dispatched in background, parallel with architect
 
 ### Architect
-Owns the system architecture. Decomposes, budgets, validates, integrates.
+Owns the system architecture and all testbenches.
 
 - Selects architecture (e.g., SAR vs pipeline vs sigma-delta) with tradeoff analysis
 - Breaks system into sub-blocks, derives each sub-block's spec from top-level requirements
 - Allocates power/noise/timing budgets (must close before proceeding)
 - Builds Verilog-A behavioral models to validate architecture before transistor design
-- Defines **verification plans** — what to verify, which analyses, what testbench topology
-- **Reviews verifier results**: audits verification conditions first, then evaluates numbers
+- **Writes all testbenches** — the designer does not write testbenches
+- Defines verification plans — what to verify, which analyses, what extraction method
 - Integrates verified sub-blocks and runs system-level verification
 - Writes `lessons_learned` at project completion for future design knowledge
 
 ### Designer
-Owns the netlist. Thinks in small-signal equations. Shows their math.
+Owns the circuit netlist. Thinks in small-signal equations. Shows their math.
 
 - Reads sub-block `spec.yml`, produces `<block>.scs` + `rationale.md`
 - Every `.param` value comes with a design equation
@@ -116,11 +134,12 @@ Owns the netlist. Thinks in small-signal equations. Shows their math.
 - Delivers verified netlist ready for next design stage
 
 ### Verifier
-Executes the verification plan. Never touches the netlist. Always quantifies.
+Reviews before simulating. Never touches the netlist. Always quantifies.
 
-- **Follows the architect's verification plan** — does not decide what to verify
-- Writes testbench, runs Spectre, writes `margin-report.md`
-- Reports **verification conditions** (testbench setup, stimulus, extraction method) alongside results
+- **Reviews both circuit netlist and testbench before simulating** — catches errors before they burn simulation cycles
+- Circuit problem → rejects, routes feedback to designer
+- Testbench problem → rejects, routes feedback to architect
+- If both are sound → runs Spectre, writes `margin-report.md`
 - Every result includes: measured value, target, margin, corner
 - Every failure includes: shortfall, likely cause, suggested fix
 
@@ -136,21 +155,21 @@ Escalate verification deliberately. Don't run full PVT corners just to check if 
 
 L1 is not just a DC operating point check. It confirms the circuit does what it's supposed to do: an ADC produces output codes, a comparator resolves correctly, a bootstrap switch tracks the input, an amplifier amplifies.
 
-## Architect Reviews Verification
+## Pre-Simulation Review
 
-When the verifier returns results, the architect does NOT look at the numbers first:
+The verifier reviews both the circuit netlist and testbench **before** running any simulation:
 
-1. **Audit verification conditions** — Is the testbench correct? Stimulus applied to the right node? Measurement extracted properly? (e.g., PSRR with proper supply modulation, CMRR with correct differential vs common-mode stimulus)
-2. **Evaluate results** — Only after conditions are confirmed correct, read the numbers and decide pass/fail
+1. **Circuit review** — missing connections? pin mismatches? parameterization errors?
+2. **Testbench review** — correct stimulus node? proper load? right analysis type? common pitfalls (PSRR/CMRR/PM setup)?
 
-If verification conditions are wrong, the verifier redoes — this does not count as a design iteration.
+If either has issues, the verifier rejects without simulating and routes feedback to the responsible agent. This saves simulation time and catches errors that would otherwise produce misleading results.
 
 ## Iteration Tracking
 
 Every design run produces `iteration-log.yml` with:
 
 - Per-sub-block iteration history (what parameters changed, why)
-- Verification redo counts (architect flagged condition errors)
+- Pre-simulation rejections by verifier
 - Optimizer invocation records
 - Lessons learned at project completion
 
@@ -217,9 +236,10 @@ servers:
     tools: [spectre]
 
 role_mapping:
+  librarian: design-server    # needs Virtuoso read/write
   architect: design-server
-  designer: design-server   # read/write Virtuoso
-  verifier: sim-server      # simulation only
+  designer: design-server     # read/write Virtuoso
+  verifier: sim-server        # simulation only
 ```
 
 Single-server teams: just define a `default` entry and skip `role_mapping`.
@@ -271,6 +291,7 @@ Use the analog-agents skill. Design an OTA for spec.yml.
 analog-agents/
 ├── skills/analog-agents/
 │   ├── SKILL.md                  # Master skill: workflow, convergence, sign-off gate
+│   ├── librarian-prompt.md       # Librarian agent template
 │   ├── architect-prompt.md       # Architect agent template
 │   ├── designer-prompt.md        # Designer agent template
 │   └── verifier-prompt.md        # Verifier agent template
@@ -290,9 +311,11 @@ analog-agents/
 
 **Spec-driven, not vibe-driven.** Every design decision traces back to a quantitative target. The spec sheet is not documentation — it is the contract.
 
+**Survey before you design.** The librarian scans existing libraries for reusable blocks before anyone writes a new transistor. Don't redesign what already exists.
+
 **Architect before designer.** Don't jump to transistors before validating the architecture. Decompose, budget, model behaviorally, then design.
 
-**Verify the verification.** The architect audits testbench conditions before reading numbers. A wrong testbench produces wrong numbers — garbage in, garbage out.
+**Review before you simulate.** The verifier checks both circuit and testbench before running Spectre. A bad testbench produces bad numbers — catch it before it wastes simulation time.
 
 **Margin, not just pass/fail.** A design that passes at TT/27C and fails at SS/125C is not done. Verification reports numbers, not verdicts.
 
