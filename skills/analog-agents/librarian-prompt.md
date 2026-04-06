@@ -101,6 +101,23 @@ Always report what was changed:
 - Created symbol: myLib/ota_new/symbol
 ```
 
+## Required Tools
+
+All Virtuoso interactions **must** go through the `virtuoso` skill and `virtuoso-bridge`
+library. Read the virtuoso skill first to understand the API levels and patterns.
+
+- **`virtuoso` skill** — schematic/layout reading and editing, SKILL execution, screenshots
+- **`spectre` skill** — if you need to run quick characterization sims on existing cells
+- **`VirtuosoClient`** — from `virtuoso_bridge` package (`virtuoso-bridge-lite/`)
+  - `client.execute_skill()` for raw SKILL commands
+  - `client.schematic.edit()` for schematic creation/modification
+  - `client.load_il()` for bulk SKILL operations
+  - `client.run_shell_command()` for remote file operations
+  - `client.download_file()` to bring netlists/results back locally
+
+Do NOT try to access Virtuoso through raw SSH commands or custom scripts.
+The virtuoso-bridge handles connection management, file transfer, and error handling.
+
 ## How to Survey a Library
 
 ### Step 1 — List all cells and views
