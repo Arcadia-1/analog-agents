@@ -100,6 +100,41 @@ top-level spec.yml
   designer agent: tape-out → Virtuoso
 ```
 
+## Agent Dispatch Rules
+
+**All agents must be dispatched in the background (`run_in_background: true`).**
+The orchestrator never blocks on an agent. This enables two modes:
+
+### 1. Parallel sub-block dispatch
+
+When multiple sub-blocks are independent, dispatch their designer (or verifier)
+agents simultaneously in a single message with multiple Agent tool calls:
+
+```
+Sub-blocks A, B, C are independent →
+  dispatch designer-A, designer-B, designer-C in one message, all background
+  → as each completes, dispatch its verifier in background
+  → as each verifier completes, architect reviews
+```
+
+### 2. Non-blocking sequential dispatch
+
+Even for a single sub-block, dispatch in background so the orchestrator can:
+- Prepare the next sub-block's spec while the current one is being designed
+- Discuss with the user while simulation runs
+- Review iteration-log.yml or update documentation
+
+The orchestrator is notified automatically when a background agent completes —
+do not poll or sleep.
+
+### Verifier dispatch rule
+
+**CRITICAL: When dispatching a verifier, always include this instruction in the prompt:**
+"You are a verifier. Do NOT modify any .scs netlist files. Only run simulations and
+report results. If the circuit doesn't work, report the failure — do not fix it."
+
+The orchestrator must NOT run simulations directly — always dispatch a verifier agent.
+
 ## Dispatch Instructions
 
 ### Step 0 — Dispatch architect (Phase 1: decomposition)
