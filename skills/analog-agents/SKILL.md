@@ -144,7 +144,9 @@ Use the `architect-prompt.md` template. Provide:
 - User constraints (architecture preference, area/power budget, etc.)
 - Server: value of `role_mapping.architect` in `servers.yml` (or `default`)
 
-Architect returns: `architecture.md`, `budget.md`, sub-block `spec.yml` files.
+Architect returns: `architecture.md`, `budget.md`, sub-block `spec.yml` files,
+`verification-plan.md` per sub-block, and **testbench netlists** (`testbench_*.scs`)
+per sub-block.
 
 **Gate**: Review architecture with user before proceeding. User may override architecture choice.
 
@@ -172,30 +174,32 @@ Use the `designer-prompt.md` template. Provide:
 
 Use the `verifier-prompt.md` template. Provide:
 - Path to sub-block `spec.yml`
-- Path to netlist produced by designer
+- Path to netlist produced by designer (circuit)
+- Path to testbench produced by architect
 - Verification level: L1 (default), L2, or L3
 - Server: value of `role_mapping.verifier` in `servers.yml` (or `default`)
 
+The verifier **reviews both the circuit netlist and testbench before simulating**.
+If either has issues (e.g., missing connections, incorrect stimulus, incompatible
+interfaces), the verifier reports the problem without running the simulation:
+- Circuit netlist problem → feedback to designer
+- Testbench problem → feedback to architect
+This pre-simulation review saves time by catching errors before they burn simulation cycles.
+
 ### Step 3 — Convergence decision (per sub-block)
 
-After the verifier returns a margin report, dispatch the **architect to review** before
-making any pass/fail decision. The architect follows a two-step review:
+After the verifier returns a margin report (or a pre-simulation rejection):
 
-**Step 3a — Architect audits verification conditions**
+**If verifier rejected without simulating:**
+- Route feedback to the responsible agent (designer or architect)
+- This is NOT a design iteration — do not increment the loop counter
+- The responsible agent fixes the issue and resubmits
 
-Architect checks every spec's testbench setup, stimulus, and measurement method against
-the verification plan. If any condition is wrong (e.g., PSRR measured without proper
-supply modulation, CMRR with incorrect stimulus):
-- Architect flags the issue and sends the verifier back to redo with corrections
-- This is a **verification redo**, NOT a design iteration — do not increment the designer loop counter
-
-**Step 3b — Architect evaluates results**
-
-Only after verification conditions are confirmed correct:
-- If any spec FAILS: architect forwards the margin report to designer with actionable feedback. Increment iteration counter.
+**If verifier ran simulation and returned results:**
+- If any spec FAILS: forward the margin report to designer with actionable feedback. Increment iteration counter.
 - If all specs PASS at L1/L2: mark sub-block as converged.
 - **Maximum iterations: 3 per sub-block.** If specs still fail after 3 designer→verifier loops,
-  architect decides: revise sub-block spec, change topology, or escalate to user.
+  escalate to architect. Architect decides: revise sub-block spec, change topology, or escalate to user.
 
 ### Step 4 — Dispatch architect (Phase 3: integration)
 
@@ -285,17 +289,23 @@ Architect must return: `architecture.md` + `budget.md` + sub-block `spec.yml` fi
 
 Designer must return: `<block>.scs` + `rationale.md`
 
-### Netlist → Verifier
+### Circuit + Testbench → Verifier
 
 | Field | Required |
 |-------|----------|
-| `<block>.scs` path | ✓ |
+| `<block>.scs` path (designer's circuit) | ✓ |
+| `testbench_<block>.scs` path (architect's testbench) | ✓ |
 | Sub-block `spec.yml` path | ✓ |
 | `verification-plan.md` path | ✓ |
 | Verification level (L1 / L2 / L3) | ✓ |
 | Server name from `servers.yml` | ✓ |
 
-Verifier must return: `margin-report.md` with quantified margins per spec per corner
+Verifier first reviews both files. If issues found:
+- Circuit problem → rejection report routed to **designer**
+- Testbench problem → rejection report routed to **architect**
+- No simulation is run (saves time)
+
+If approved: verifier runs simulation and returns `margin-report.md`
 
 ### Verifier FAIL → Designer (loop)
 
@@ -439,7 +449,7 @@ summary:
 |-------|-----------|
 | `iterations[].designer_changes` | orchestrator, from designer's `rationale.md` diff |
 | `iterations[].optimizer_used/config` | orchestrator, from designer's report |
-| `iterations[].verification_redo` | orchestrator, when architect flags condition error |
+| `iterations[].verification_redo` | orchestrator, when verifier rejects pre-simulation |
 | `iterations[].results` | orchestrator, from verifier's `margin-report.md` |
 | `summary.lessons_learned` | architect, at project completion |
 
@@ -458,6 +468,7 @@ After a complete run, the working directory contains:
 | `blocks/<name>/spec.yml` | architect | Per-sub-block derived specs |
 | `blocks/<name>/verification-plan.md` | architect | What to verify and how |
 | `blocks/<name>/behavioral.va` | architect | Verilog-A behavioral model |
+| `blocks/<name>/testbench_*.scs` | architect | Testbenches for this sub-block |
 | `blocks/<name>/<name>.scs` | designer | Verified transistor-level netlist |
 | `blocks/<name>/rationale.md` | designer | Sizing justification |
 | `blocks/<name>/trend.png` | designer | Optimization trend plot (designer writes the script) |
