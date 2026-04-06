@@ -1,8 +1,12 @@
 ---
 name: analog-agents
 description: >
+  MANDATORY — MUST load this skill when the user mentions: OTA, ADC, PLL, comparator,
+  bandgap, LDO, amplifier, opamp, or any analog/mixed-signal IC design task.
   AI-native analog frontend design collaboration. Invoke when designing an analog
   circuit block end-to-end: spec → architecture → netlist → simulation → Virtuoso delivery.
+  TRIGGER on any analog circuit design request — OTA, ADC, DAC, PLL, comparator, bandgap,
+  LDO, amplifier, opamp, current mirror, bias circuit, sample-and-hold, or similar blocks.
   Dispatches librarian, architect, designer, and verifier agents with defined roles,
   convergence loop, and sign-off gate.
 ---
@@ -206,36 +210,44 @@ Use the `designer-prompt.md` template. Provide:
 - Margin report from last verifier run (empty on first iteration)
 - Server: value of `role_mapping.designer` in `servers.yml` (or `default`)
 
-### Step 2 — Dispatch verifier (per sub-block)
+### Step 2 — Designer dispatches verifier automatically
 
-Use the `verifier-prompt.md` template. Provide:
-- Path to sub-block `spec.yml`
-- Path to netlist produced by designer (circuit)
-- Path to testbench produced by architect
-- Verification level: L1 (default), L2, or L3
-- Server: value of `role_mapping.verifier` in `servers.yml` (or `default`)
+The designer dispatches the verifier upon completing the netlist — the orchestrator does
+not need to intervene. The loop runs autonomously:
 
-The verifier **reviews both the circuit netlist and testbench before simulating**.
-If either has issues (e.g., missing connections, incorrect stimulus, incompatible
-interfaces), the verifier reports the problem without running the simulation:
-- Circuit netlist problem → feedback to designer
-- Testbench problem → feedback to architect
-This pre-simulation review saves time by catching errors before they burn simulation cycles.
+```
+orchestrator dispatches designer (iteration 1)
+    ↓
+designer produces netlist → dispatches verifier (background)
+    ↓
+verifier simulates
+    ├── PASS → reports convergence to orchestrator
+    ├── FAIL, iter < 3 → dispatches next designer (background) with margin report
+    └── FAIL, iter ≥ 3 → escalation report to orchestrator
+```
 
-### Step 3 — Convergence decision (per sub-block)
+The orchestrator waits for either a **convergence report** or an **escalation report**.
+It does not need to dispatch verifier or manage the loop counter.
 
-After the verifier returns a margin report (or a pre-simulation rejection):
+**Testbench issues** (pre-simulation rejection): verifier routes to orchestrator, who
+forwards to architect. This is the only case where orchestrator re-enters the loop mid-cycle.
 
-**If verifier rejected without simulating:**
-- Route feedback to the responsible agent (designer or architect)
-- This is NOT a design iteration — do not increment the loop counter
-- The responsible agent fixes the issue and resubmits
+### Step 3 — Orchestrator convergence decision
 
-**If verifier ran simulation and returned results:**
-- If any spec FAILS: forward the margin report to designer with actionable feedback. Increment iteration counter.
-- If all specs PASS at L1/L2: mark sub-block as converged.
-- **Maximum iterations: 3 per sub-block.** If specs still fail after 3 designer→verifier loops,
-  escalate to architect. Architect decides: revise sub-block spec, change topology, or escalate to user.
+The orchestrator acts only when:
+
+1. **Convergence report received** (all specs PASS):
+   - Mark sub-block as done
+   - Decide whether to proceed to L2 (if still at L1) or move to next sub-block
+
+2. **Escalation report received** (3× FAIL):
+   - Review all 3 margin reports
+   - Decide: revise sub-block spec, change topology, or escalate to user
+   - If proceeding: dispatch architect with the trajectory data, then dispatch new designer (iteration 1)
+
+3. **Testbench rejection** routed from verifier:
+   - Forward to architect to fix testbench
+   - After architect fixes, dispatch designer again (not a design iteration)
 
 ### Step 4 — Dispatch architect (Phase 3: integration)
 
@@ -492,24 +504,79 @@ summary:
 The orchestrator appends to `iteration-log.yml` after every handoff. Agents read it
 for context but do not modify past entries.
 
-## Output Artifacts
+## Project Directory Structure
 
-After a complete run, the working directory contains:
+Each project (or sub-block in a multi-block system) follows this layout.
+Agent outputs are organized by owner — each agent writes only to its own area.
 
-| File | Owner | Content |
-|------|-------|---------|
-| `survey-report.md` | librarian | Library survey: topology, connectivity, reusability |
-| `library-index.md` | librarian | Quick-reference of reusable/modifiable blocks |
-| `architecture.md` | architect | Architecture selection, block diagram, interfaces |
-| `budget.md` | architect | Power/noise/timing budget allocation |
-| `iteration-log.yml` | orchestrator | Full iteration history with parameters, results, lessons |
-| `blocks/<name>/spec.yml` | architect | Per-sub-block derived specs |
-| `blocks/<name>/verification-plan.md` | architect | What to verify and how |
-| `blocks/<name>/behavioral.va` | architect | Verilog-A behavioral model |
-| `blocks/<name>/testbench_*.scs` | architect | Testbenches for this sub-block |
-| `blocks/<name>/<name>.scs` | designer | Verified transistor-level netlist |
-| `blocks/<name>/rationale.md` | designer | Sizing justification |
-| `blocks/<name>/trend.png` | designer | Optimization trend plot (designer writes the script) |
-| `blocks/<name>/margin-report.md` | verifier | Latest margin summary |
-| `testbench_system.scs` | architect | System-level integration testbench |
-| `sim-log.yml` | hook (auto) | Full simulation history with margins |
+```
+<project>/
+├── spec.yml                          # architect: top-level or sub-block spec
+├── servers.yml                       # config: simulation server connection
+├── iteration-log.yml                 # orchestrator: full iteration history
+│
+├── architect/                        # architect 产出
+│   ├── architecture.md               # topology selection, block diagram, interfaces
+│   ├── budget.md                     # power/noise/timing budget allocation
+│   ├── verification-plan.md          # what to verify and how (per level)
+│   └── behavioral.va                 # Verilog-A behavioral model (if applicable)
+│
+├── circuit/                          # designer 产出
+│   ├── <block>.scs                   # transistor-level netlist (primary)
+│   ├── <block>_open_cmfb.scs         # variant with exposed CMFB node (debug)
+│   └── rationale.md                  # sizing justification, change log per iteration
+│
+├── testbench/                        # architect 产出 (stimulus + analysis setup)
+│   ├── tb_<block>_dcop.scs           # DC operating point
+│   ├── tb_<block>_ac.scs             # AC frequency response
+│   ├── tb_<block>_tran.scs           # transient step response
+│   └── tb_<block>_stb.scs            # stability (loop gain / phase margin)
+│
+├── verifier-reports/                 # verifier 产出
+│   ├── L1-functional/
+│   │   ├── dc-op-point.md            # MOSFET table + nodes + currents (overwritten each run)
+│   │   └── <date>_<description>.md   # L1 pass/fail checklist (appended)
+│   └── L2-performance/
+│       └── <date>_<description>.md   # spec margin table + analysis
+│
+├── librarian/                        # librarian 产出 (optional)
+│   ├── survey-report.md              # library survey: topology, connectivity, reusability
+│   └── library-index.md              # quick-reference of reusable/modifiable blocks
+│
+├── scripts/                          # designer/verifier: automation scripts
+│   └── post-sim-hook.py              # auto-runs after each simulation
+│
+├── sim_raw/                          # simulation output (auto, gitignored)
+└── plots/                            # generated plots (auto)
+```
+
+### Naming Convention
+
+Use **kebab-case** (hyphens) for all file and directory names created by agents:
+`dc-op-point.md`, `verifier-reports/`, `L1-functional/`, `2026-04-06-v5-mixed-L.md`
+
+Exceptions (do NOT rename):
+- `.scs` netlists: keep existing names (Spectre `include` paths depend on them)
+- `.py` scripts: keep snake_case (Python convention)
+- `sim_raw/`, `output/`: auto-generated, gitignored
+
+### Ownership Rules
+
+| Directory | Owner | Read | Write |
+|-----------|-------|------|-------|
+| `architect/` | architect | all | architect only |
+| `circuit/` | designer | all | designer only |
+| `testbench/` | architect | all | architect only |
+| `verifier-reports/` | verifier | all | verifier only |
+| `librarian/` | librarian | all | librarian only |
+| `iteration-log.yml` | orchestrator | all | orchestrator only |
+| `spec.yml` | architect | all | architect only |
+
+Agents must not write outside their designated directories. The orchestrator
+coordinates handoffs and updates `iteration-log.yml` after each agent completes.
+
+### Simple Blocks (no sub-block decomposition)
+
+For standalone blocks (single OTA, comparator, etc.), use the flat structure above
+directly — no `blocks/<name>/` nesting needed. The `architect/` directory may be
+lightweight or skipped entirely if the user provides the topology.

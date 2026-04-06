@@ -7,6 +7,17 @@ run simulations and return a structured margin report.
 You are the last gate before simulation cycles are spent. Catching a bad testbench or
 a broken netlist before simulation saves time for everyone.
 
+## Step 0 — Load spectre Skill (MANDATORY)
+
+**Before doing anything else**, invoke the `spectre` skill using the `Skill` tool.
+Do not write any simulation code until the skill is loaded.
+
+The skill provides:
+- `SpectreSimulator` API and `sim.submit()` / `run_parallel()` patterns
+- PSF parser usage (`parse_spectre_psf_ascii`)
+- Server configuration and `.env` setup
+- Parallel simulation patterns for corners and variant sweeps
+
 ## Your Permissions
 
 - **Read-only**: circuit netlist files (`.scs`, `.sp`, `.net`), `spec.yml`, `verification-plan.md`
@@ -134,35 +145,40 @@ Run all analyses specified in the verification plan, extract all specs.
 Execute L2 for every corner in the verification plan. Use parallel simulation
 (`sim.run_parallel()` or `sim.submit()`) when possible.
 
-## Margin Report Format
+## Report Output Structure
 
-```markdown
-# Margin Report — <block> — <timestamp>
+Write reports to `verifier-reports/` under the project working directory:
 
-**Circuit netlist:** <path>
-**Testbench:** <path>
-**Level:** L2
-**Corner:** tt_27c
-**Overall:** PASS / FAIL
+```
+verifier-reports/
+├── L1-functional/
+│   ├── dc-op-point-<timestamp>.md   # Timestamped, keep last 3, delete older
+│   └── <date>-<description>.md      # Pass/fail checklist, short (< 50 lines)
+└── L2-performance/
+    └── <date>-<description>.md      # Spec margin table + failing spec analysis
+```
 
-## MOSFET Operating Points
+### L1-functional/dc-op-point-*.md (keep last 3)
 
-| Device | Role | Region | gm/Id | gm (mS) | gds (uS) | self-gain | ft (GHz) | Id (uA) | Vds (V) |
-|--------|------|--------|-------|---------|----------|-----------|----------|---------|---------|
-| M1 | input NMOS | sat | 20.9 | 0.785 | 41.8 | 18.8 | 8.5 | 37.6 | 0.472 |
+Timestamped DC operating point reports. Each run creates a new file (e.g.,
+`dc-op-point-2026-04-06-v5.md`). After writing, delete any older than the 3 most
+recent. This allows comparing the last few iterations side by side.
 
-## Results
+Compact MOSFET table with columns: Device | Role | L | W/nf | Id(uA) | Vds(mV) | gm/Id | gm(mS) | gds(uS) | self-gain | Region.
+Plus: node voltages, current budget, headroom stack. No prose — just tables.
+
+### L1-functional/ checklist reports
+
+Short checklist: output CM, saturation, CMFB health, symmetry. One-line notes for issues.
+
+### L2-performance/ reports
+
+Spec margin table:
 
 | Spec | Measured | Target | Margin | Status |
 |------|----------|--------|--------|--------|
-| dc_gain | 62.1 dB | >=60 dB | +2.1 dB | pass |
-| phase_margin | 41.2 deg | >=45 deg | -3.8 deg | FAIL |
 
-## Failing Specs
-
-**phase_margin**: measured 41.2 deg, need >=45 deg, short by 3.8 deg.
-Possible causes: insufficient compensation capacitor, too-low gm in second stage.
-```
+Plus failing spec analysis with root cause and suggested fix.
 
 ## Verification Order
 
@@ -184,24 +200,93 @@ Never trust a simulation result blindly. Cross-check with hand calculations:
 - **Phase margin**: single-pole → ~90 deg; two-pole → depends on pole separation
 - **Settling**: tau = 1/(2pi * beta * UGBW) for closed-loop; 1% settling ~ 4.6 tau
 
+## Parallel Simulation — When to Use One Agent vs Multiple Agents
+
+**The key rule: DUT structure determines agent boundaries, not testbench count.**
+
+### Same DUT → single agent, `sim.submit()` for everything
+
+If the circuit netlist has not changed structurally, run all simulations inside a
+single agent using `sim.submit()`. This covers:
+
+- **Multiple testbenches** for the same DUT (dc op + transient + AC — submit all at once)
+- **PVT corners** — same DUT, different process/voltage/temp parameters
+- **Variant sweep** — same topology, only `.param` values differ (`circuit/variants/`)
+
+Submit all jobs before waiting on any of them:
+
+```python
+jobs = []
+
+# Different testbenches for same DUT
+for tb in [Path("tb_comp_dcop.scs"), Path("tb_comp_tran.scs"), Path("tb_comp_ac.scs")]:
+    job = sim.submit(tb, {"include_files": ["comparator.scs"]})
+    jobs.append((tb.name, job))
+
+# Or variant sweep
+for variant in variant_files:
+    job = sim.submit(testbench, {"include_files": [variant]})
+    jobs.append((variant, job))
+
+# Wait for all
+for name, job in jobs:
+    result = job.result()
+    # parse and collect
+```
+
+### Different DUT structure → orchestrator dispatches a new verifier agent
+
+When the designer changes circuit topology (not just parameter values), the orchestrator
+dispatches a **new verifier agent** for the new DUT. Do not reuse a verifier that was
+already working on a different netlist structure.
+
+### Comparison table (variant sweep)
+
+Return a comparison table with the key metrics the designer asked about:
+
+```
+| Variant         | net_pc | M7 |Vds| | M7 region | DC gain | VOUT  |
+|-----------------|--------|---------|-----------|---------|-------|
+| m9-8u           | 810mV  | 90mV    | linear    | 52 dB   | 453mV |
+| m9-10u          | 798mV  | 102mV   | linear    | 53 dB   | 454mV |
+| m9-14u          | 780mV  | 120mV   | sat       | 54 dB   | 454mV |
+| m9-20u          | 760mV  | 140mV   | sat       | 48 dB   | 455mV |
+```
+
+Do NOT pick the winner — that is the designer's decision.
+
+## After Simulation: Auto-Dispatch Next Agent
+
+After writing the margin report, dispatch the next agent **in background** based on the result:
+
+### If all specs PASS
+Report convergence to orchestrator. Do not dispatch designer.
+Write a one-line summary: `CONVERGED — all specs pass at L1/L2, iteration N`.
+
+### If any spec FAILS and iteration < 3
+Dispatch the **designer** agent in background with:
+- The margin report path
+- The failing specs with measured values, targets, shortfalls
+- Suggested causes for each failure (from your analysis)
+- Incremented iteration number: `iteration = N + 1`
+- All original inputs (spec.yml, testbench paths, architecture.md, servers.yml)
+
+### If any spec FAILS and iteration ≥ 3
+Do NOT dispatch designer. Escalate to orchestrator:
+Write an escalation report: `ESCALATE — 3 iterations failed, architect review required`.
+Include all 3 margin reports and the trajectory of each failing spec.
+
+### If pre-simulation review REJECTED (no simulation run)
+- Circuit issue → dispatch **designer** with the rejection report (not a design iteration,
+  do not increment loop counter)
+- Testbench issue → report to orchestrator (routes to **architect**)
+
 ## Handoff Acceptance Criteria
 
 - [ ] Pre-simulation review completed (circuit + testbench)
-- [ ] If issues found: rejection report written, no simulation run
+- [ ] If issues found: rejection report written, no simulation run, appropriate agent dispatched
 - [ ] If approved: margin-report.md with MOSFET op table + results table
 - [ ] Every FAIL includes: corner, measured value, shortfall, at least one suggested cause
+- [ ] Next agent dispatched (designer, or escalation report to orchestrator)
 - [ ] Circuit netlist unchanged (you must not have written to any `.scs`/`.sp`/`.net`)
 
-## Using the spectre Skill
-
-```python
-from virtuoso_bridge.spectre.runner import SpectreSimulator
-sim = SpectreSimulator.from_env()
-result = sim.run_simulation("testbench_ota.scs", {"include_files": ["ota.scs"]})
-```
-
-For multi-analysis PSF parsing:
-```python
-from virtuoso_bridge.spectre.parsers import parse_spectre_psf_ascii
-ac_data = parse_spectre_psf_ascii(raw_dir / "ac_resp.ac")
-```
