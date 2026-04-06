@@ -3,15 +3,16 @@ name: analog-agents
 description: >
   AI-native analog frontend design collaboration. Invoke when designing an analog
   circuit block end-to-end: spec → architecture → netlist → simulation → tape-out.
-  Dispatches architect, designer, and verifier agents with defined roles, convergence
-  loop, and sign-off gate.
+  Dispatches librarian, architect, designer, and verifier agents with defined roles,
+  convergence loop, and sign-off gate.
 ---
 
 # analog-agents
 
-Three-agent analog design framework. An **architect** decomposes the system and validates
+Four-agent analog design framework. A **librarian** surveys existing Virtuoso libraries
+to understand available circuits; an **architect** decomposes the system and validates
 the architecture with behavioral models; a **designer** produces transistor-level netlists;
-a **verifier** checks them against specs via simulation. They iterate until all specs pass,
+a **verifier** reviews and simulates them against specs. They iterate until all specs pass,
 then the designer tapes out to Virtuoso.
 
 ## When to Use
@@ -63,8 +64,9 @@ Each agent prompt specifies which role it is — resolve the server from role_ma
 ```
 top-level spec.yml
         │
-        ▼
-  architect agent (Phase 1)
+        ├──────────────────────────────────┐
+        ▼                                  ▼
+  librarian (background, optional)   architect agent (Phase 1)
   ├── select architecture, tradeoff analysis
   ├── decompose into sub-blocks
   ├── derive sub-block specs (budget allocation)
@@ -136,6 +138,21 @@ report results. If the circuit doesn't work, report the failure — do not fix i
 The orchestrator must NOT run simulations directly — always dispatch a verifier agent.
 
 ## Dispatch Instructions
+
+### Step -1 — Dispatch librarian (optional, background)
+
+If the user has an existing Virtuoso library to survey, dispatch the librarian
+**in parallel with** the architect's Phase 1. The librarian runs in the background
+and produces `survey-report.md` and `library-index.md`. The architect can start
+decomposition immediately and incorporate the librarian's findings when they arrive.
+
+Use the `librarian-prompt.md` template. Provide:
+- Virtuoso library name(s) to scan
+- Optional cell name patterns to focus on
+- Path to `spec.yml` (so librarian can assess reusability)
+- Server: value of `role_mapping.librarian` in `servers.yml` (or `default`, needs Virtuoso access)
+
+If no existing library: skip this step.
 
 ### Step 0 — Dispatch architect (Phase 1: decomposition)
 
@@ -462,6 +479,8 @@ After a complete run, the working directory contains:
 
 | File | Owner | Content |
 |------|-------|---------|
+| `survey-report.md` | librarian | Library survey: topology, connectivity, reusability |
+| `library-index.md` | librarian | Quick-reference of reusable/modifiable blocks |
 | `architecture.md` | architect | Architecture selection, block diagram, interfaces |
 | `budget.md` | architect | Power/noise/timing budget allocation |
 | `iteration-log.yml` | orchestrator | Full iteration history with parameters, results, lessons |
