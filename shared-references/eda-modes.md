@@ -77,6 +77,19 @@ spec.yml
   (ready for simulation when EDA becomes available)
 ```
 
+## Review-Mode Exclusive Skills
+
+These skills work ONLY in review mode (or standalone) and do not require EDA:
+
+| Skill | Purpose |
+|-------|---------|
+| `/analog-learn` | Step-by-step design teaching with physics explanations |
+| `/analog-explore` | Architecture comparison, parameter sweeps, feasibility checks |
+| `/analog-audit` | Comprehensive static audit of existing netlists |
+
+These skills are always available regardless of mode, but they are especially
+valuable in review mode where simulation is not an option.
+
 ## Deliverable in Review Mode
 
 The output is a **review-verified design package**:

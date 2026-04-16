@@ -314,7 +314,10 @@ analog-agents/
 │   ├── analog-verify/            # Pre-sim review and simulation
 │   ├── analog-integrate/         # Integration verification and sign-off
 │   ├── analog-review/            # Cross-model circuit audit
-│   └── analog-wiki/              # Design knowledge graph
+│   ├── analog-wiki/              # Design knowledge graph
+│   ├── analog-learn/             # Interactive design teaching companion
+│   ├── analog-explore/           # Design space exploration
+│   └── analog-audit/             # Static netlist audit service
 ├── prompts/
 │   ├── architect-prompt.md       # Architect agent template
 │   ├── designer-prompt.md        # Designer agent template
@@ -374,6 +377,9 @@ analog-agents/
 | `/analog-integrate` | Integration verification and sign-off |
 | `/analog-review` | Cross-model circuit audit (minimax, qwen, kimi, glm) |
 | `/analog-wiki` | Design knowledge graph |
+| `/analog-learn` | Interactive design teaching companion (no EDA needed) |
+| `/analog-explore` | Design space exploration with hand calculations (no EDA needed) |
+| `/analog-audit` | Static netlist audit service (no EDA needed) |
 
 ## Effort Levels
 

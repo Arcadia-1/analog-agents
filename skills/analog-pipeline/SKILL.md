@@ -344,3 +344,6 @@ The orchestrator may skip architect entirely for trivial blocks if the user agre
 | `/analog-verify` | Verifier: pre-sim review + Spectre simulation |
 | `/analog-integrate` | Architect Phase 3: integration verification |
 | `/analog-wiki` | Knowledge graph: consult, add, archive design knowledge |
+| `/analog-learn` | Interactive design teaching and learning companion |
+| `/analog-explore` | Design space exploration with hand calculations |
+| `/analog-audit` | Static netlist audit service |
