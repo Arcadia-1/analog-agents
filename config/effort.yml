@@ -1,0 +1,10 @@
+# Project-level effort configuration for analog-agents.
+# Command-line --effort overrides this file.
+# Default: standard
+
+default_effort: standard
+
+# Per block-type overrides (optional):
+# overrides:
+#   comparator: intensive
+#   bias: lite

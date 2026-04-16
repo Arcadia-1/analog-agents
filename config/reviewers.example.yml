@@ -1,0 +1,35 @@
+# Cross-model reviewer configuration for /analog-review
+# Copy to config/reviewers.yml and fill in real API keys. Never commit reviewers.yml.
+
+reviewers:
+  minimax:
+    provider: minimax
+    model: minimax-m2.7
+    api_key: "${MINIMAX_API_KEY}"
+    base_url: "https://api.minimax.chat/v1"
+    timeout: 120
+
+  qwen:
+    provider: openai-compatible
+    model: qwen-3.6-plus
+    api_key: "${QWEN_API_KEY}"
+    base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    timeout: 120
+
+  kimi:
+    provider: openai-compatible
+    model: kimi-k2.5
+    api_key: "${KIMI_API_KEY}"
+    base_url: "https://api.moonshot.cn/v1"
+    timeout: 120
+
+  glm:
+    provider: openai-compatible
+    model: glm-5.1
+    api_key: "${GLM_API_KEY}"
+    base_url: "https://open.bigmodel.cn/api/paas/v4"
+    timeout: 120
+
+voting:
+  min_reviewers: 2
+  tie_break: "flag_for_human"     # flag_for_human | most_severe
