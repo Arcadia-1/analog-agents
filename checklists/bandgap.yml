@@ -1,0 +1,42 @@
+# ============================================================
+# Bandgap Reference Pre-Simulation Checklist
+# Applies to: CMOS bandgap voltage/current references
+# ============================================================
+
+startup_circuit:
+  description: "Bandgap must have startup circuit to avoid zero-current state"
+  method: semantic
+  severity: error
+  effort: lite
+  auto_checkable: false
+  references: []
+  how: >
+    Bandgap has two stable points: desired operating point and
+    zero-current degenerate state. Startup circuit injects small
+    current at power-up to push circuit away from zero-current.
+    Check: does startup branch exist? Does it auto-disconnect
+    after the circuit reaches operating point?
+
+bjt_area_ratio:
+  description: "BJT area ratio must match PTAT design"
+  method: structural
+  severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
+  how: >
+    deltaVbe = VT * ln(N), where N = area ratio.
+    Common N=8. Check Q1 and Q2 multi/area parameter ratio = N.
+
+curvature_compensation:
+  description: "High-precision bandgap needs curvature compensation"
+  method: semantic
+  severity: warn
+  effort: intensive
+  auto_checkable: false
+  references: []
+  how: >
+    First-order bandgap TC ~ +/-10-30 ppm/C.
+    If spec requires < 5 ppm/C, need second-order compensation
+    (segmented PTAT, nonlinear correction).
+    Check: does spec TC precision match topology capability?

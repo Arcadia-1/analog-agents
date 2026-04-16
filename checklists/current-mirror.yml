@@ -1,0 +1,41 @@
+# ============================================================
+# Current Mirror Pre-Simulation Checklist
+# Applies to: simple mirrors, cascode mirrors, wide-swing mirrors
+# ============================================================
+
+ratio_accuracy:
+  description: "Mirror ratio via W*multi, identical L and finger width"
+  method: structural
+  severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
+  how: >
+    Reference and mirror transistors must have identical L and W/nf
+    (finger width). Ratio adjusted only via nf or multi.
+    Using different finger widths to set ratio destroys matching.
+
+compliance_headroom:
+  description: "Mirror output Vds must maintain saturation"
+  method: estimate
+  severity: error
+  effort: lite
+  auto_checkable: false
+  references: []
+  how: >
+    Vds_mirror >= Vdsat + margin (>= 100mV for strong inversion).
+    Cascode mirror: compliance = 2*Vdsat.
+    Check worst case: when output voltage swings to extreme, does
+    mirror transistor leave saturation?
+
+channel_length_modulation:
+  description: "Short-channel mirrors have significant CLM current error"
+  method: estimate
+  severity: warn
+  effort: standard
+  auto_checkable: false
+  references: [strat-mixed-l]
+  how: >
+    deltaI/I ~ lambda * deltaVds, lambda proportional to 1/L.
+    L=60nm: lambda ~ 0.1-0.3/V. Vds difference of 100mV causes
+    10-30% current error. Fix: use 2-4x Lmin, or cascode.

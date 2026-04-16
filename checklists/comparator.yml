@@ -1,0 +1,65 @@
+# ============================================================
+# Comparator Pre-Simulation Checklist
+# Applies to: StrongArm, double-tail, dynamic comparators
+# ============================================================
+
+input_pair_symmetry:
+  description: "Input pair transistors must be perfectly matched"
+  method: structural
+  severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
+  how: >
+    StrongArm / double-tail: M_inp and M_inn must have identical
+    W, L, nf, multi. Any asymmetry creates systematic offset.
+
+latch_cross_coupling:
+  description: "Latch cross-coupling connections must be correct"
+  method: structural
+  severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
+  how: >
+    Cross-coupled pair: M_a gate connects to M_b drain, M_b gate
+    connects to M_a drain. Same-side connection (gate-to-own-drain)
+    means positive feedback fails and latch cannot resolve.
+
+clock_gating:
+  description: "Clock gating transistors connected with correct polarity"
+  method: structural
+  severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
+  how: >
+    Tail switch (NMOS): gate = CLK, source = VSS.
+    Reset switches (PMOS): gate = CLK (active low), drain = output nodes.
+    CLK polarity reversed = reset phase and evaluation phase swap.
+
+precharge_completeness:
+  description: "All internal nodes must be precharged to known state during reset"
+  method: semantic
+  severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
+  how: >
+    CLK=0 (reset): output nodes precharged to VDD (PMOS reset switch),
+    intermediate nodes (tail drain) discharged to VSS.
+    Missing precharge on any node causes state residue from previous
+    decision, leading to data-dependent offset.
+
+offset_estimation:
+  description: "Estimate input-referred offset from Vth mismatch"
+  method: estimate
+  severity: warn
+  effort: intensive
+  auto_checkable: false
+  references: []
+  how: >
+    sigma(Vos) ~ sigma(deltaVth) = Avt / sqrt(W*L).
+    28nm typical Avt ~ 3-5 mV*um.
+    Example: W=2u, L=60n -> sigma ~ 3/sqrt(0.12) ~ 8.7mV, 3sigma ~ 26mV.
+    If spec requires offset < 1mV, must have calibration or redundant bits.

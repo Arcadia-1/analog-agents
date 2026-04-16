@@ -1,0 +1,57 @@
+# ============================================================
+# LDO Pre-Simulation Checklist
+# Applies to: PMOS/NMOS pass LDO, capacitor-less LDO
+# ============================================================
+
+loop_stability_with_load:
+  description: "LDO loop must be stable across full load range"
+  method: semantic
+  severity: error
+  effort: lite
+  auto_checkable: false
+  references: []
+  how: >
+    LDO has at least two poles: error amp output and pass device gate.
+    Output pole depends on load current and output cap.
+    Light load: output pole moves low -> phase margin drops.
+    Heavy load: output pole moves up -> usually more stable.
+    Check: compensation handles min-to-max load range.
+    ESR zero from output cap must be placed correctly.
+
+dropout_headroom:
+  description: "Pass device must have sufficient Vds at max load"
+  method: estimate
+  severity: error
+  effort: lite
+  auto_checkable: false
+  references: []
+  how: >
+    Dropout = Vin_min - Vout.
+    PMOS: dropout = |Vds_sat| at max load.
+    |Vds_sat| = sqrt(2*Imax / (up*Cox*W/L)) for strong inversion.
+    Check: Vin_min - Vout >= |Vds_sat| with margin.
+
+load_transient_decoupling:
+  description: "Output capacitor must handle load transient droop"
+  method: estimate
+  severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
+  how: >
+    Load step droop = deltaI * ESR + deltaI * dt / Cout.
+    Recovery depends on loop bandwidth.
+    Check: Cout large enough for spec'd max droop.
+    Check: loop BW fast enough for spec'd recovery time.
+
+psrr_at_frequency:
+  description: "PSRR must meet spec at relevant frequencies"
+  method: estimate
+  severity: warn
+  effort: intensive
+  auto_checkable: false
+  references: []
+  how: >
+    LDO PSRR = error_amp_gain * gm_pass / gds_pass at low freq.
+    Degrades above loop bandwidth.
+    If spec requires PSRR > 40dB at 1MHz, loop BW must exceed 1MHz.

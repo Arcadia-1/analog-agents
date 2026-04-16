@@ -1,0 +1,59 @@
+# ============================================================
+# PLL Pre-Simulation Checklist
+# Applies to: charge-pump PLL, ADPLL, ring/LC oscillator PLL
+# ============================================================
+
+loop_filter_component_values:
+  description: "Loop filter R and C values must be physically reasonable"
+  method: structural
+  severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
+  how: >
+    R > 0, C > 0. R typically 1k-100k, C typically 1p-100p for GHz PLLs.
+    Second-order filter: C1 >> C2 (typically 5-10x).
+    If charge pump current Icp specified: Icp * R < VDD
+    (loop filter voltage must stay in supply range).
+
+vco_gain_sign:
+  description: "VCO gain must have correct sign for negative feedback"
+  method: semantic
+  severity: error
+  effort: lite
+  auto_checkable: false
+  references: []
+  how: >
+    Trace PLL feedback loop:
+    1. Phase error increases -> charge pump sources current -> Vctrl rises
+    2. Vctrl rises -> VCO frequency should INCREASE (positive Kvco)
+    3. Higher frequency -> phase advances -> error DECREASES
+    Negative Kvco = positive feedback = PLL won't lock.
+
+lock_range_vs_spec:
+  description: "PLL lock range must cover specified frequency range"
+  method: estimate
+  severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
+  how: >
+    Lock range = Kvco * Vctrl_swing.
+    Vctrl_swing limited by charge pump compliance and loop filter.
+    Estimate: Vctrl_min ~ 0.2V, Vctrl_max ~ VDD-0.2V.
+    Check: lock range covers spec'd frequency range with margin.
+    Also: is VCO free-running frequency within lock range?
+
+phase_noise_budget:
+  description: "Phase noise contributions must meet jitter spec"
+  method: estimate
+  severity: warn
+  effort: intensive
+  auto_checkable: false
+  references: []
+  how: >
+    In-band noise dominated by charge pump and reference.
+    Out-of-band dominated by VCO.
+    VCO phase noise: L(f) ~ -10*log10(2*F*kT*R/P0) - 20*log10(f/f0)
+    where F=noise figure, P0=oscillation power, f0=carrier.
+    Check total integrated jitter meets spec.

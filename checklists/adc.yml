@@ -1,0 +1,58 @@
+# ============================================================
+# ADC Pre-Simulation Checklist
+# Applies to: SAR, pipeline, sigma-delta, flash ADC
+# ============================================================
+
+sampling_capacitor_ktc:
+  description: "Sampling capacitor must meet thermal noise budget"
+  method: estimate
+  severity: error
+  effort: lite
+  auto_checkable: false
+  references: []
+  how: >
+    Thermal noise: Pn = kT/C.
+    For N-bit ADC with Vref range:
+      LSB = Vref / 2^N
+      Required: sqrt(kT/C) < LSB / (2 * target_sigma)
+      Typically 6-sigma: C > 4*k*T*(2*target_sigma/LSB)^2
+    Example: 8-bit, 1V, 6-sigma -> C > ~50fF.
+    If calculated C > spec'd C, flag noise budget violation.
+
+timing_budget_closure:
+  description: "Total conversion time must fit within sampling period"
+  method: estimate
+  severity: error
+  effort: standard
+  auto_checkable: false
+  references: []
+  how: >
+    SAR: N_bits * (DAC_settling + comparator_decision + logic_delay) + sampling_time <= 1/fs.
+    Pipeline: stage_latency * throughput must meet fs.
+    Sum all sub-block timing budgets from architecture.md.
+    If sum > 1/fs, flag.
+
+reference_settling:
+  description: "DAC reference must settle before comparator evaluates"
+  method: estimate
+  severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
+  how: >
+    DAC reference must settle to < 0.5*LSB before comparator fires.
+    tau = Rout_ref * Cdac. Settling to 0.5*LSB ~ N*ln(2)*tau.
+    Check: settling time < allocated time in timing budget.
+
+dnl_inl_from_component_matching:
+  description: "Component matching must support target DNL/INL"
+  method: estimate
+  severity: warn
+  effort: intensive
+  auto_checkable: false
+  references: []
+  how: >
+    Capacitive DAC: DNL ~ sigma(deltaC/C) at MSB transition.
+    sigma(deltaC/C) = Ac/sqrt(W*L) for MIM, Ac/sqrt(C) for MOM.
+    8-bit: need sigma < 0.5*LSB at MSB.
+    If no matching data, flag for Monte Carlo verification.
