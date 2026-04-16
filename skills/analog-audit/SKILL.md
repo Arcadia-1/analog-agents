@@ -1,151 +1,245 @@
 ---
 name: analog-audit
 description: >
-  Audit an existing analog circuit netlist for correctness, quality, and risks.
-  Works without EDA — pure static analysis with checklists, hand calculations,
-  and cross-model review. Use when reviewing someone else's design, checking a
-  legacy netlist, or doing design review before tapeout.
-  TRIGGER on: "audit", "review netlist", "check this circuit", "design review",
-  "is this netlist correct", "review this .scs".
+  Audit analog circuit netlists for correctness, quality, and risks.
+  Supports both pre-layout (schematic) and post-layout (extracted) netlists.
+  Post-layout mode filters massive parasitic netlists before auditing.
+  Works without EDA. TRIGGER on: "audit", "review netlist", "check this circuit",
+  "design review", "pre-layout", "post-layout", "post-sim", "extracted netlist".
 ---
 
 # analog-audit
 
-Static audit service for analog circuit netlists. No EDA required.
-Combines checklists, hand-calculation verification, cross-model review,
-and wiki anti-pattern matching into a comprehensive audit report.
+Static audit service for analog circuit netlists. Supports two modes:
 
-## When to Use
+- **Pre-layout audit** — clean schematic-level netlist (hundreds to thousands of lines)
+- **Post-layout audit** — extracted netlist with parasitics (tens of thousands to millions of lines)
 
-- Reviewing a colleague's netlist before simulation
-- Checking a legacy design for known issues
-- Pre-tapeout design review without re-running all sims
-- Understanding an unfamiliar netlist's quality and risks
+No EDA required for either mode.
 
-## Input
+## Detecting Audit Type
 
-Minimum: a .scs netlist file.
+Auto-detect from netlist characteristics:
+- Lines > 50,000 OR parasitic R+C count > 10x active device count → **post-layout**
+- Otherwise → **pre-layout**
 
-Optional (improve audit quality):
-- `rationale.md` — designer's sizing justification
-- `spec.yml` — target specifications
-- `verifier-reports/` — existing simulation results to cross-check
+User can force: `/analog-audit pre <netlist>` or `/analog-audit post <netlist>`
 
-## Audit Process
+## Pre-Layout Audit
+
+For schematic-level netlists. This is the standard audit flow.
+
+### Process
 
 ```
-Input netlist
+Input: <block>.scs (schematic netlist)
     |
     v
   1. Topology identification
-     Parse structure, identify: diff pairs, mirrors, cascodes, CMFB, etc.
-     Classify: "This is a folded-cascode fully-differential OTA with resistive CMFB"
+     Parse structure: diff pairs, mirrors, cascodes, CMFB, etc.
+     Classify topology.
     |
     v
   2. Checklist execution
-     Auto-detect applicable checklists from topology identification
-     Run all checks at full depth (all methods: structural + estimate + semantic)
-     Flag every issue with severity
+     Auto-detect applicable checklists from topology.
+     Run all checks per effort level.
     |
     v
   3. Hand-calculation audit
-     Extract all .param values
-     Re-derive key specs from first principles:
-       - DC gain, UGBW, phase margin, noise, power, headroom, output swing
-     Compare against rationale.md (if provided) — flag discrepancies
-     Compare against spec.yml (if provided) — flag potential violations
+     Extract .param values, re-derive specs from first principles.
+     Compare against rationale.md and spec.yml if available.
     |
     v
   4. Anti-pattern scan
-     Match topology against wiki/anti-patterns/
-     For each match: explain the risk and check if this netlist is affected
+     Match topology against wiki/anti-patterns/.
     |
     v
-  5. Cross-model review
-     Send to configured reviewers (per effort level)
-     Collect divergence analysis
+  5. Cross-model review (effort >= standard)
+     Send to configured reviewers per review-protocol.md.
     |
     v
-  6. Audit report
-     verifier-reports/audit-report.md
+  6. Pre-layout audit report
+     verifier-reports/audit-pre-layout.md
 ```
 
-## Audit Report Format
+### Pre-Layout Report Format
 
 ```markdown
-# Circuit Audit — <netlist> — <date>
+# Pre-Layout Audit — <netlist> — <date>
 
 ## Circuit Summary
 - **Topology**: folded-cascode fully-differential OTA
-- **Process**: 28nm (inferred from model includes)
 - **Devices**: 14 MOSFETs, 2 resistors, 1 capacitor
 - **Supply**: 0.9V
-- **Estimated power**: 360uA × 0.9V = 324uW
+- **Estimated power**: 324uW
 
 ## Checklist Results
-Checklists applied: common, amplifier, folded-cascode, differential
-
 | Check | Severity | Result | Detail |
 |-------|----------|--------|--------|
-| floating_nodes | error | PASS | |
-| bulk_connections | error | PASS | |
-| mirror_ratio_vs_comment | error | FAIL | M3/M4 ratio 4:1 but comment says 5:1 |
-| input_pair_type_vs_vcm | error | PASS | PMOS input, Vcm=0.2V, headroom OK |
-| cmfb_polarity | error | PASS | Negative feedback confirmed |
-| ...  | | | |
-
-**Result: 1 ERROR, 2 WARNINGS out of 23 checks**
+| ...   | ...      | ...    | ...    |
 
 ## Hand-Calculation Audit
-
-| Spec | Estimated | Spec Target | Status | Notes |
-|------|-----------|-------------|--------|-------|
-| DC gain | ~58 dB | >= 60 dB | MARGINAL | gm1=1.2mS, Rout~950k |
-| UGBW | ~190 MHz | >= 200 MHz | MARGINAL | gm1/CL, CL=1pF |
-| Phase margin | ~65 deg | >= 60 deg | OK | Single dominant pole |
-| Power | 324 uW | <= 500 uW | OK | 360uA total |
-| Output swing | ±350 mV | >= ±300 mV | OK | 4×Vdsat headroom |
+| Spec | Estimated | Target | Status | Confidence |
+|------|-----------|--------|--------|------------|
+| ...  | ...       | ...    | ...    | ...        |
 
 ## Anti-Pattern Scan
-- [anti-001] **Diode-Load CMFB**: NOT affected — uses mirror-load CMFB
-- [anti-002] **Vcm=VDD/2 with PMOS**: NOT affected — Vcm=0.2V
+- [anti-001] Diode-Load CMFB: NOT affected
+- [anti-002] Vcm=VDD/2: NOT affected
 
 ## Cross-Model Review
-(Full divergence analysis from /analog-review)
+(divergence analysis from /analog-review)
 
 ## Risk Summary
-1. **CRITICAL**: Mirror ratio mismatch (M3/M4) — likely wrong current, affects all specs
-2. **WARNING**: DC gain and UGBW are marginal — no margin for PVT variation
-3. **INFO**: Design appears functional but optimistic at typical corner
+1. [CRITICAL] ...
+2. [WARNING] ...
 
 ## Recommendations
-1. Fix M3/M4 mirror ratio (change W from 4u to 5u, or update comment)
-2. Increase gm1 by ~10% (widen M1/M2 or increase Ibias) for gain/BW margin
-3. Recommend Spectre verification before tapeout — hand-calc estimates are ±15%
+...
 ```
+
+## Post-Layout Audit
+
+For extracted netlists with parasitics. These netlists are typically 100K-10M+ lines.
+They CANNOT be audited directly — they must be filtered first.
+
+### Process
+
+```
+Input: <block>_extracted.scs (post-layout netlist, possibly millions of lines)
+    |
+    v
+  1. Statistics scan
+     Run: python3 tools/postlayout_filter.py stats <netlist>
+     Report: total lines, device counts, parasitic R/C counts.
+     Confirm this is indeed a post-layout netlist.
+    |
+    v
+  2. Skeleton extraction
+     Run: python3 tools/postlayout_filter.py extract <netlist> --threshold <cap_thresh>
+     Produces: <block>_filtered.scs — active devices + significant parasitics only.
+     Typically reduces 500K lines to 2-5K lines.
+    |
+    v
+  3. Pre-vs-post comparison (if pre-layout netlist available)
+     Run: python3 tools/postlayout_filter.py compare <pre>.scs <post>.scs
+     Produces: device count diff, top parasitic caps, impact assessment.
+    |
+    v
+  4. Filtered netlist audit
+     Run standard audit flow (checklist + hand-calc) on the FILTERED netlist.
+     Active device sizing should match pre-layout (if not, flag).
+    |
+    v
+  5. Parasitic impact assessment
+     Analyze significant parasitics:
+     - Which high-impedance nodes have large parasitic caps?
+       (These directly reduce gain and bandwidth)
+     - Which signal paths have significant parasitic R?
+       (These add noise and IR drop)
+     - Are there unexpected coupling caps between sensitive nodes?
+       (e.g., clock-to-analog coupling, input-to-output coupling)
+     - Total added capacitance at each critical node vs original CL.
+    |
+    v
+  6. Post-layout audit report
+     verifier-reports/audit-post-layout.md
+```
+
+### Filtering Parameters
+
+Default thresholds (adjustable):
+- **Capacitor threshold**: 1fF — keep caps >= 1fF, discard smaller
+- **Resistor threshold**: 1Mohm — keep R <= 1M (low-R paths matter for IR drop)
+
+For advanced filtering:
+- `--threshold 10f` — stricter, only keep significant caps (faster audit, less detail)
+- `--threshold 0.1f` — looser, keep more parasitics (slower but more thorough)
+
+### Post-Layout Report Format
+
+```markdown
+# Post-Layout Audit — <netlist> — <date>
+
+## Netlist Statistics
+- **Original**: 523,847 lines
+- **Filtered**: 3,241 lines (0.6% of original)
+- **Active devices**: 14 MOSFETs (matches pre-layout)
+- **Parasitic caps**: 187,432 total, 847 significant (>= 1fF)
+- **Parasitic resistors**: 203,561 total, 1,204 significant (<= 1Mohm)
+- **Total parasitic capacitance**: 2.3 pF
+
+## Pre-Layout vs Post-Layout Comparison
+(if pre-layout netlist provided)
+
+| Type | Pre-Layout | Post-Layout | Delta |
+|------|-----------|-------------|-------|
+| MOSFET | 14 | 14 | 0 |
+| Resistor | 2 | 203,563 | +203,561 parasitic |
+| Capacitor | 1 | 187,433 | +187,432 parasitic |
+
+## Top Parasitic Capacitors
+| Rank | Nodes | Value | Impact |
+|------|-------|-------|--------|
+| 1 | VOUTP — VSS | 340 fF | Adds to output load, reduces UGBW |
+| 2 | VOUTN — VSS | 335 fF | Symmetric, expected |
+| 3 | net_fold — VSS | 120 fF | On high-Z fold node, reduces gain |
+| ...
+
+## Parasitic Impact on Specs
+| Spec | Pre-Layout Est. | Post-Layout Est. | Degradation | Severity |
+|------|----------------|------------------|-------------|----------|
+| UGBW | 500 MHz | ~380 MHz | -24% | WARNING |
+| DC gain | 62 dB | ~58 dB | -4 dB | WARNING |
+| Phase margin | 65 deg | ~60 deg | -5 deg | OK (still meeting) |
+| Settling | 2 ns | ~3.2 ns | +60% | CRITICAL |
+
+## Coupling Analysis
+- VINP — VOUTP: 2.3 fF coupling cap (may affect PSRR)
+- CLK — net_analog: 0.8 fF (monitor for clock feedthrough)
+
+## Active Device Verification
+All 14 MOSFETs match pre-layout sizing (W, L, nf, multi).
+No unexpected devices added or removed.
+
+## Checklist Results (on filtered netlist)
+(same format as pre-layout)
+
+## Risk Summary
+1. [CRITICAL] Settling time degraded 60% — parasitic cap at output nodes
+2. [WARNING] UGBW reduced 24% — may fail spec at SS corner
+3. [INFO] 2.3fF input-output coupling — verify PSRR impact
+
+## Recommendations
+1. Add shielding between VINP and VOUTP routing
+2. Minimize routing over fold nodes (net_fold has 120fF parasitic)
+3. Re-simulate post-layout to confirm margin estimates
+```
+
+## Subcommands
+
+| Command | Description |
+|---------|-------------|
+| `/analog-audit <netlist>` | Auto-detect pre/post layout, run appropriate audit |
+| `/analog-audit pre <netlist>` | Force pre-layout audit |
+| `/analog-audit post <netlist>` | Force post-layout audit |
+| `/analog-audit post <netlist> --pre <pre_netlist>` | Post-layout audit with pre-layout comparison |
+| `/analog-audit stats <netlist>` | Quick statistics only (no full audit) |
 
 ## Effort Interaction
 
-| Effort | Audit depth |
-|--------|------------|
-| lite | Checklist (structural only) + topology identification |
-| standard | Full checklist + hand-calc audit |
-| intensive | Full checklist + hand-calc + 2-model cross-review |
-| exhaustive | Everything + full cross-model review + wiki anti-pattern scan |
+| Effort | Pre-Layout | Post-Layout |
+|--------|-----------|-------------|
+| lite | Checklist (structural) + topology ID | Stats + skeleton extract only |
+| standard | Full checklist + hand-calc | Stats + extract + filtered audit |
+| intensive | + 2-model cross-review | + pre-vs-post comparison + parasitic impact |
+| exhaustive | + full cross-review + wiki scan | + coupling analysis + all cross-review |
 
 ## Standalone Usage
 
-This skill is fully standalone. It does not require analog-pipeline or any
-prior design activity. Just point it at a netlist:
+Fully standalone. Does not require analog-pipeline or prior design activity.
 
 ```
 Use the analog-audit skill to review circuit/ota.scs
+Use the analog-audit skill to audit post-layout extracted_ota.scs --pre circuit/ota.scs
 ```
-
-If spec.yml exists in the same directory, it will be used automatically.
-If rationale.md exists, it will be cross-checked.
-
-## Wiki Interaction
-
-- Reads `wiki/anti-patterns/` for anti-pattern scan
-- On completion: if a new anti-pattern is discovered, suggest adding it to wiki
