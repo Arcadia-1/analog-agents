@@ -39,6 +39,11 @@ Read effort level per `shared-references/effort-contract.md`. Print at startup:
 | **intensive** | 2 models, divergence analysis |
 | **exhaustive** | All available models, full divergence report |
 
+**Review mode auto-escalation**: When the pipeline runs in review mode (no EDA),
+cross-model review is the primary quality gate. If the configured effort is `lite`
+or `standard`, it is automatically escalated to `intensive` (2 models + divergence
+analysis). This ensures at least one independent audit when simulation is unavailable.
+
 ## Supported Models
 
 | Name | Provider | Model ID |

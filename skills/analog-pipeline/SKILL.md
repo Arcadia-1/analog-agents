@@ -94,6 +94,23 @@ Print the active effort level and parameters at startup:
 
     [effort: intensive] corners=5, max_iter=5, reviewers=2, wiki=lesson+strategy
 
+## EDA Mode
+
+Read `shared-references/eda-modes.md` for mode detection.
+
+If `servers.yml` is not found and `eda_mode` is not explicitly set to `full`:
+- Print: `[mode: review] No EDA detected — running in review mode`
+- Skip `/analog-behavioral` regardless of effort
+- Skip `/analog-integrate`
+- Auto-escalate `/analog-review` effort: if configured effort < intensive, use intensive
+- `/analog-verify` runs in review-only mode (checklist + hand-calc, no simulation)
+- Final deliverable is a review-verified design package, not a simulation-verified one
+- Skip Virtuoso migration and L3 sign-off
+
+If `servers.yml` exists:
+- Print: `[mode: full] EDA detected — full simulation loop enabled`
+- All skills operate normally
+
 ## The Workflow
 
 ```

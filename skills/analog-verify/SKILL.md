@@ -41,6 +41,32 @@ Read the active effort level at startup. Print it:
 
 See `shared-references/effort-contract.md` for the full dimension table and invariant rules.
 
+## EDA Mode
+
+Read `shared-references/eda-modes.md` for mode detection.
+
+### Full Mode (default when servers.yml exists)
+
+Load the `spectre` skill and run simulations as described below.
+
+### Review Mode (no servers.yml or eda_mode=review)
+
+Do NOT load the spectre skill. Do NOT attempt to run simulations. Instead:
+
+1. **Run all applicable checklists** per effort level (same as full mode)
+2. **Cross-validate hand calculations** from designer's rationale.md:
+   - Extract stated gm, gds, Vdsat, branch currents from rationale
+   - Re-derive key specs: DC gain, UGBW, phase margin estimate, headroom, power
+   - Flag any spec where rationale math doesn't match netlist parameters
+3. **Produce estimated margin report** in `verifier-reports/`:
+   - Same table format as full mode, but column header says "Estimated" not "Measured"
+   - Add "Confidence" column: `high` (simple formula), `medium` (multi-step), `low` (rough estimate), `cannot-estimate`
+   - Header: `# Estimated Margin Report — <block> — REVIEW MODE (not simulated)`
+4. **Specs that cannot be estimated**: settling time, PSRR/CMRR (need simulation for mismatch), Monte Carlo results. List these as `cannot-estimate` with a note.
+5. **Convergence decision**: same logic as full mode (PASS/FAIL/ESCALATE) but based on estimated values. Mark the outcome as `ESTIMATED_PASS` or `ESTIMATED_FAIL` to distinguish from simulation-verified results.
+
+Skip: Step 0 (loading spectre skill), any `sim.submit()` calls, any PSF parsing, any simulation job management.
+
 ## Checklist Loading
 
 Read the `checklists` field from the sub-block's `spec.yml`:

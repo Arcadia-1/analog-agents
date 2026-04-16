@@ -8,3 +8,9 @@ default_effort: standard
 # overrides:
 #   comparator: intensive
 #   bias: lite
+
+# EDA mode (optional):
+# full    — requires servers.yml, runs Spectre simulations
+# review  — no EDA needed, uses checklists + cross-model review + hand-calc validation
+# auto    — detect from servers.yml presence (default)
+# eda_mode: auto
