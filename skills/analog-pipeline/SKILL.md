@@ -167,6 +167,14 @@ The pipeline sequences the following skill invocations:
 7. **L3 sign-off** — verifier must complete L3 PVT on the integrated design; all specs must pass across all corners
 8. **`/analog-wiki archive-project`** — extract cases from iteration-log.yml, prompt architect for narrative.md (effort >= standard)
 9. **Reflection narrative** — architect writes retrospective: "what emerged that could not have been predicted?" (effort = exhaustive only)
+10. **`/analog-evolve review`** (effort >= standard) — extract lessons, propose checklist additions
+
+After each sub-block converges, the pipeline runs a lightweight evolution check:
+- `/analog-evolve wiki` — extract lessons from this sub-block's iteration trajectory
+- `/analog-evolve checklist` — check if any verifier rejections suggest new checklist items
+
+These are quick (read iteration-log + verifier-reports, propose entries) and do not
+block the next sub-block's design.
 
 ## Agent Dispatch Rules
 
@@ -347,3 +355,4 @@ The orchestrator may skip architect entirely for trivial blocks if the user agre
 | `/analog-learn` | Interactive design teaching and learning companion |
 | `/analog-explore` | Design space exploration with hand calculations |
 | `/analog-audit` | Static netlist audit service |
+| `/analog-evolve` | Self-evolution: extract lessons, evolve checklists and prompts |

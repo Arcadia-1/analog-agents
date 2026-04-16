@@ -86,6 +86,7 @@ These skills work ONLY in review mode (or standalone) and do not require EDA:
 | `/analog-learn` | Step-by-step design teaching with physics explanations |
 | `/analog-explore` | Architecture comparison, parameter sweeps, feasibility checks |
 | `/analog-audit` | Comprehensive static audit of existing netlists |
+| `/analog-evolve` | Self-evolution: extract lessons, evolve checklists and prompts |
 
 These skills are always available regardless of mode, but they are especially
 valuable in review mode where simulation is not an option.

@@ -317,7 +317,8 @@ analog-agents/
 │   ├── analog-wiki/              # Design knowledge graph
 │   ├── analog-learn/             # Interactive design teaching companion
 │   ├── analog-explore/           # Design space exploration
-│   └── analog-audit/             # Static netlist audit service
+│   ├── analog-audit/             # Static netlist audit service
+│   └── analog-evolve/            # Self-evolution engine
 ├── prompts/
 │   ├── architect-prompt.md       # Architect agent template
 │   ├── designer-prompt.md        # Designer agent template
@@ -380,6 +381,7 @@ analog-agents/
 | `/analog-learn` | Interactive design teaching companion (no EDA needed) |
 | `/analog-explore` | Design space exploration with hand calculations (no EDA needed) |
 | `/analog-audit` | Static netlist audit service (no EDA needed) |
+| `/analog-evolve` | Self-evolution engine: learns from each design session |
 
 ## Effort Levels
 
