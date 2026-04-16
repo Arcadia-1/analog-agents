@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/analog--agents-spec%20in%2C%20verified%20schematic%20out-00d4aa?style=for-the-badge&labelColor=0a0a0a" alt="analog-agents"/>
+  <img src="https://img.shields.io/badge/analog--agents-12%20skills%20for%20analog%20IC%20design-00d4aa?style=for-the-badge&labelColor=0a0a0a" alt="analog-agents"/>
 </p>
 
 <p align="center">
-  <strong>Agentic analog front-end design — spec in, verified schematic out.</strong><br/>
-  Four specialized agents. One convergence loop. Zero ambiguity.
+  <strong>Agentic analog IC design framework — with or without EDA.</strong><br/>
+  12 skills. 4 agents. Knowledge graph. Cross-model review. Self-evolution.
 </p>
 
 <p align="center">
@@ -32,6 +32,14 @@
 </p>
 
 <p align="center">
+  <!-- v2 capabilities -->
+  <img src="https://img.shields.io/badge/skills-12-00d4aa?style=flat-square" alt="12 Skills"/>
+  <img src="https://img.shields.io/badge/EDA-optional-ff6b35?style=flat-square" alt="EDA Optional"/>
+  <img src="https://img.shields.io/badge/cross--model-4%20LLMs-6c5ce7?style=flat-square" alt="4 LLM Reviewers"/>
+  <img src="https://img.shields.io/badge/self--evolving-wiki%20%2B%20checklists-f59e0b?style=flat-square" alt="Self-Evolving"/>
+</p>
+
+<p align="center">
   <!-- License & contribution -->
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat-square" alt="MIT License"/></a>
   <a href="https://github.com/Arcadia-1/analog-agents/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome"/></a>
@@ -42,7 +50,7 @@
 
 ## What Is This?
 
-**analog-agents** is an agentic skill framework that brings real analog engineering discipline to AI-assisted circuit design. It works with any coding agent that supports skill files.
+**analog-agents** is a federated skill framework for AI-native analog IC design. 12 independently executable skills cover the full lifecycle — from architecture exploration to post-layout audit — with or without EDA tools. It works with any coding agent that supports skill files.
 
 Most AI tools treat analog design like software: write some code, run some tests, ship it. That misses everything that makes analog hard — the architecture tradeoffs, the spec budgeting across sub-blocks, the PVT corner matrix, the sizing rationale, the convergence loop between design and simulation, the sign-off gate before delivering a verified schematic.
 

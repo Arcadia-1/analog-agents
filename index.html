@@ -12,6 +12,7 @@
   --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
   --architect:#e879f9;--designer:#f59e0b;--verifier:#3b82f6;
   --pass:#22c55e;--fail:#ef4444;
+  --orange:#ff6b35;--amber:#f59e0b;--purple:#6c5ce7;--teal:#00d4aa;
   --radius:12px;--radius-lg:20px;
 }
 html{scroll-behavior:smooth}
@@ -26,7 +27,7 @@ a:hover{text-decoration:underline}
 .hero-badge{display:inline-block;padding:0.4rem 1.2rem;border:1px solid var(--accent);border-radius:999px;font-size:0.8rem;color:var(--accent);letter-spacing:0.05em;margin-bottom:2rem;text-transform:uppercase;animation:fadeDown 0.8s ease}
 .hero h1{font-size:clamp(2.5rem,6vw,5rem);font-weight:800;letter-spacing:-0.03em;animation:fadeDown 0.8s ease 0.1s both}
 .hero h1 span{background:linear-gradient(135deg,var(--accent),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero p{font-size:1.25rem;color:var(--text2);max-width:650px;margin:1.5rem auto;animation:fadeDown 0.8s ease 0.2s both}
+.hero p{font-size:1.25rem;color:var(--text2);max-width:700px;margin:1.5rem auto;animation:fadeDown 0.8s ease 0.2s both}
 .hero-cta{display:flex;gap:1rem;margin-top:2rem;flex-wrap:wrap;justify-content:center;animation:fadeDown 0.8s ease 0.3s both}
 .btn{padding:0.8rem 2rem;border-radius:999px;font-size:0.95rem;font-weight:600;border:none;cursor:pointer;transition:all 0.3s}
 .btn-primary{background:var(--accent);color:var(--bg)}
@@ -44,6 +45,67 @@ section{padding:6rem 2rem}
 .section-label{font-size:0.8rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--accent);margin-bottom:0.5rem}
 .section-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:700;margin-bottom:1rem;letter-spacing:-0.02em}
 .section-subtitle{color:var(--text2);font-size:1.1rem;max-width:600px;margin-bottom:3rem}
+
+/* Pill rows */
+.pill-row{display:flex;gap:1.2rem;flex-wrap:wrap;justify-content:center}
+.pill{display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;border-radius:999px}
+.pill .pill-icon{font-size:1.3rem}
+.pill .pill-label{font-weight:700;font-size:0.95rem}
+.pill .pill-sub{font-size:0.75rem;color:var(--text3)}
+
+/* Skills grid */
+.skills-section{background:var(--bg2)}
+.skills-group-title{font-size:1.1rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:0.6rem}
+.skills-group-title .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem;margin-bottom:2.5rem}
+.skill-card{background:var(--bg);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:1.2rem 1.4rem;transition:all 0.3s}
+.skill-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.skill-card.purple:hover{border-color:var(--purple)}
+.skill-card.orange:hover{border-color:var(--orange)}
+.skill-card h4{font-size:0.9rem;margin-bottom:0.3rem;display:flex;align-items:center;gap:0.5rem}
+.skill-card h4 .sk-icon{font-size:1rem}
+.skill-card p{font-size:0.8rem;color:var(--text2)}
+
+/* Two modes */
+.modes-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+.mode-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius-lg);padding:2.5rem;position:relative;overflow:hidden}
+.mode-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.mode-card.full-mode::before{background:linear-gradient(90deg,var(--accent),transparent)}
+.mode-card.review-mode::before{background:linear-gradient(90deg,var(--orange),transparent)}
+.mode-card h3{font-size:1.3rem;margin-bottom:0.5rem}
+.mode-card .mode-tag{display:inline-block;padding:0.2rem 0.7rem;border-radius:6px;font-size:0.75rem;font-weight:700;margin-bottom:1rem}
+.mode-card.full-mode .mode-tag{background:rgba(0,212,170,0.15);color:var(--accent)}
+.mode-card.review-mode .mode-tag{background:rgba(255,107,53,0.15);color:var(--orange)}
+.mode-card ul{list-style:none;display:flex;flex-direction:column;gap:0.6rem}
+.mode-card li{font-size:0.9rem;color:var(--text2);display:flex;align-items:flex-start;gap:0.5rem}
+.mode-card li::before{content:'';width:6px;height:6px;border-radius:50%;margin-top:0.5rem;flex-shrink:0}
+.mode-card.full-mode li::before{background:var(--accent)}
+.mode-card.review-mode li::before{background:var(--orange)}
+
+/* Cross-model review */
+.model-pills{display:flex;gap:1rem;flex-wrap:wrap;margin:1.5rem 0}
+.model-pill{padding:0.6rem 1.2rem;background:rgba(108,92,231,0.1);border:1px solid rgba(108,92,231,0.25);border-radius:999px;font-weight:600;font-size:0.9rem;color:var(--purple)}
+.consensus-table{max-width:600px;margin:2rem auto 0;overflow:hidden;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.06)}
+.consensus-table table{width:100%;border-collapse:collapse;font-size:0.85rem}
+.consensus-table th{background:var(--bg3);padding:0.7rem 1rem;text-align:left;font-weight:600;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text3)}
+.consensus-table td{padding:0.6rem 1rem;border-top:1px solid rgba(255,255,255,0.04)}
+.consensus-table .agree{color:var(--pass)}
+.consensus-table .diverge{color:var(--fail)}
+
+/* Knowledge graph */
+.kg-types{display:flex;gap:1rem;flex-wrap:wrap;margin:1.5rem 0}
+.kg-type{padding:0.5rem 1rem;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2);border-radius:8px;font-size:0.85rem;color:var(--accent)}
+.kg-edges{display:flex;gap:1rem;flex-wrap:wrap;margin-top:1rem}
+.kg-edge{padding:0.4rem 0.9rem;background:rgba(255,255,255,0.04);border-radius:6px;font-size:0.8rem;color:var(--text2);font-family:monospace}
+
+/* Effort levels */
+.effort-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem}
+.effort-card{background:var(--bg);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius);padding:2rem;transition:all 0.3s}
+.effort-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.effort-badge{display:inline-block;padding:0.3rem 0.8rem;border-radius:6px;font-size:0.75rem;font-weight:700;letter-spacing:0.05em;margin-bottom:1rem}
+.effort-card h3{font-size:1.1rem;margin-bottom:0.4rem}
+.effort-card p{font-size:0.88rem;color:var(--text2)}
+.effort-card .effort-use{margin-top:0.8rem;font-size:0.8rem;color:var(--text3);font-style:italic}
 
 /* Workflow */
 .workflow-section{background:var(--bg2)}
@@ -153,12 +215,14 @@ section{padding:6rem 2rem}
 .install-step{display:flex;gap:1.2rem;align-items:flex-start}
 .install-num{width:36px;height:36px;border-radius:50%;background:rgba(0,212,170,0.12);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;flex-shrink:0}
 .install-step code{display:block;background:var(--bg);padding:0.8rem 1rem;border-radius:8px;font-family:monospace;font-size:0.85rem;margin-top:0.5rem;border:1px solid rgba(255,255,255,0.06);color:var(--text2)}
+.install-note{margin-top:1.5rem;max-width:700px;margin-left:auto;margin-right:auto;padding:1rem 1.5rem;background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2);border-radius:var(--radius);font-size:0.9rem;color:var(--text2)}
+.install-note strong{color:var(--orange)}
 
 /* Footer */
 footer{padding:4rem 2rem;text-align:center;border-top:1px solid rgba(255,255,255,0.06)}
 footer p{color:var(--text3);font-size:0.9rem}
 footer a{color:var(--accent)}
-.footer-links{display:flex;gap:2rem;justify-content:center;margin-bottom:1.5rem}
+.footer-links{display:flex;gap:2rem;justify-content:center;margin-bottom:1.5rem;flex-wrap:wrap}
 
 /* Animations */
 @keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
@@ -172,6 +236,8 @@ footer a{color:var(--accent)}
   .handoff-flow{flex-direction:column;align-items:center}
   .handoff-arrow{transform:rotate(90deg);padding:0.5rem 0}
   .handoff-card{width:100%;max-width:300px}
+  .modes-grid{grid-template-columns:1fr}
+  .skills-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
 }
 </style>
 </head>
@@ -179,38 +245,66 @@ footer a{color:var(--accent)}
 
 <!-- Hero -->
 <section class="hero">
-  <div class="hero-badge">Agentic Skill Framework for Analog IC Design</div>
+  <div class="hero-badge">12 Skills for Analog IC Design</div>
   <h1>analog<span>-agents</span></h1>
-  <p>Four AI agents collaborate on your analog front-end &mdash; one surveys, one architects, one designs, one verifies. They converge on specs until every schematic is verified.</p>
+  <p>12 skills for the full analog design lifecycle &mdash; architecture, design, verification, review, learning, and self-evolution. Works with or without EDA.</p>
 
-  <!-- Agent quartet preview -->
+  <!-- Agent quartet -->
   <div style="display:flex;gap:1.2rem;margin-top:2.5rem;flex-wrap:wrap;justify-content:center;animation:fadeDown 0.8s ease 0.25s both">
-    <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:999px">
-      <span style="font-size:1.3rem">&#x1f4da;</span>
+    <div class="pill" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
+      <span class="pill-icon">&#x1f4da;</span>
       <div style="text-align:left">
-        <div style="font-weight:700;font-size:0.95rem;color:#10b981">Librarian</div>
-        <div style="font-size:0.75rem;color:var(--text3)">Survey &bull; Understand &bull; Manage</div>
+        <div class="pill-label" style="color:#10b981">Librarian</div>
+        <div class="pill-sub">Survey &bull; Understand &bull; Manage</div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(232,121,249,0.08);border:1px solid rgba(232,121,249,0.2);border-radius:999px">
-      <span style="font-size:1.3rem">&#x1f3d7;</span>
+    <div class="pill" style="background:rgba(232,121,249,0.08);border:1px solid rgba(232,121,249,0.2)">
+      <span class="pill-icon">&#x1f3d7;</span>
       <div style="text-align:left">
-        <div style="font-weight:700;font-size:0.95rem;color:var(--architect)">Architect</div>
-        <div style="font-size:0.75rem;color:var(--text3)">Decompose &bull; Testbench &bull; Validate</div>
+        <div class="pill-label" style="color:var(--architect)">Architect</div>
+        <div class="pill-sub">Decompose &bull; Testbench &bull; Validate</div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:999px">
-      <span style="font-size:1.3rem">&#x1f3af;</span>
+    <div class="pill" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2)">
+      <span class="pill-icon">&#x1f3af;</span>
       <div style="text-align:left">
-        <div style="font-weight:700;font-size:0.95rem;color:var(--designer)">Designer</div>
-        <div style="font-size:0.75rem;color:var(--text3)">Hand-calc &bull; Netlist &bull; Optimize</div>
+        <div class="pill-label" style="color:var(--designer)">Designer</div>
+        <div class="pill-sub">Hand-calc &bull; Netlist &bull; Optimize</div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:0.8rem;padding:0.8rem 1.5rem;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:999px">
-      <span style="font-size:1.3rem">&#x1f52c;</span>
+    <div class="pill" style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2)">
+      <span class="pill-icon">&#x1f52c;</span>
       <div style="text-align:left">
-        <div style="font-weight:700;font-size:0.95rem;color:var(--verifier)">Verifier</div>
-        <div style="font-size:0.75rem;color:var(--text3)">Testbench &bull; Spectre &bull; Margin</div>
+        <div class="pill-label" style="color:var(--verifier)">Verifier</div>
+        <div class="pill-sub">Testbench &bull; Spectre &bull; Margin</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Capability pills -->
+  <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;justify-content:center;animation:fadeDown 0.8s ease 0.35s both">
+    <div class="pill" style="background:rgba(108,92,231,0.08);border:1px solid rgba(108,92,231,0.2)">
+      <span class="pill-icon">&#x1f50d;</span>
+      <div style="text-align:left">
+        <div class="pill-label" style="color:var(--purple)">Cross-Model Review</div>
+      </div>
+    </div>
+    <div class="pill" style="background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.2)">
+      <span class="pill-icon">&#x1f578;</span>
+      <div style="text-align:left">
+        <div class="pill-label" style="color:var(--teal)">Knowledge Graph</div>
+      </div>
+    </div>
+    <div class="pill" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2)">
+      <span class="pill-icon">&#x1f9ec;</span>
+      <div style="text-align:left">
+        <div class="pill-label" style="color:var(--amber)">Self-Evolution</div>
+      </div>
+    </div>
+    <div class="pill" style="background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.2)">
+      <span class="pill-icon">&#x1f4a1;</span>
+      <div style="text-align:left">
+        <div class="pill-label" style="color:var(--orange)">No-EDA Mode</div>
       </div>
     </div>
   </div>
@@ -304,6 +398,75 @@ footer a{color:var(--accent)}
           <div class="comm-quote">"phase_margin: measured 41.2&deg;, target &ge;45&deg;, short by 3.8&deg; at SS/125&deg;C"</div>
           <div class="comm-quote">"REJECT: PSRR testbench applies AC to input, not VDD &mdash; routing to architect"</div>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Skills -->
+<section class="skills-section" id="skills">
+  <div class="container">
+    <div class="section-label">Skills</div>
+    <div class="section-title">12 Skills. Use Any Subset.</div>
+    <div class="section-subtitle">Each skill is independently executable. Use the full pipeline or pick the ones you need.</div>
+
+    <div class="skills-group-title"><span class="dot" style="background:var(--accent)"></span> Design Pipeline</div>
+    <div class="skills-grid">
+      <div class="skill-card">
+        <h4><span class="sk-icon">&#x1f680;</span> analog-pipeline</h4>
+        <p>Full design pipeline orchestrator &mdash; spec to verified schematic</p>
+      </div>
+      <div class="skill-card">
+        <h4><span class="sk-icon">&#x1f9e9;</span> analog-decompose</h4>
+        <p>Architecture decomposition, tradeoff analysis, and budget allocation</p>
+      </div>
+      <div class="skill-card">
+        <h4><span class="sk-icon">&#x1f4d0;</span> analog-behavioral</h4>
+        <p>Verilog-A behavioral model validation before transistor design</p>
+      </div>
+      <div class="skill-card">
+        <h4><span class="sk-icon">&#x1f3af;</span> analog-design</h4>
+        <p>Transistor-level netlist with hand-calc rationale</p>
+      </div>
+      <div class="skill-card">
+        <h4><span class="sk-icon">&#x1f52c;</span> analog-verify</h4>
+        <p>Pre-sim review, Spectre simulation, margin reporting</p>
+      </div>
+      <div class="skill-card">
+        <h4><span class="sk-icon">&#x1f517;</span> analog-integrate</h4>
+        <p>Integration verification and L3 PVT sign-off</p>
+      </div>
+    </div>
+
+    <div class="skills-group-title"><span class="dot" style="background:var(--purple)"></span> Quality &amp; Knowledge</div>
+    <div class="skills-grid">
+      <div class="skill-card purple">
+        <h4><span class="sk-icon">&#x1f50d;</span> analog-review</h4>
+        <p>Cross-model circuit audit with minimax, qwen, kimi, glm</p>
+      </div>
+      <div class="skill-card purple">
+        <h4><span class="sk-icon">&#x1f4d6;</span> analog-wiki</h4>
+        <p>Design knowledge graph &mdash; anti-patterns, strategies, topology lessons</p>
+      </div>
+      <div class="skill-card purple">
+        <h4><span class="sk-icon">&#x1f9ec;</span> analog-evolve</h4>
+        <p>Self-evolution engine: learns from each design session</p>
+      </div>
+    </div>
+
+    <div class="skills-group-title"><span class="dot" style="background:var(--orange)"></span> No-EDA Tools</div>
+    <div class="skills-grid">
+      <div class="skill-card orange">
+        <h4><span class="sk-icon">&#x1f393;</span> analog-learn</h4>
+        <p>Interactive design teaching companion &mdash; no EDA needed</p>
+      </div>
+      <div class="skill-card orange">
+        <h4><span class="sk-icon">&#x1f9ed;</span> analog-explore</h4>
+        <p>Design space exploration with hand calculations</p>
+      </div>
+      <div class="skill-card orange">
+        <h4><span class="sk-icon">&#x1f50e;</span> analog-audit</h4>
+        <p>Static netlist audit service &mdash; no simulation required</p>
       </div>
     </div>
   </div>
@@ -409,6 +572,136 @@ footer a{color:var(--accent)}
           <h3>Verified Schematic</h3>
           <p>All specs pass across all corners. Verified netlist delivered. Lessons learned recorded.</p>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Two Modes -->
+<section id="modes">
+  <div class="container">
+    <div class="section-label">Two Modes</div>
+    <div class="section-title">Full EDA or Review Only &mdash; Your Choice</div>
+    <div class="section-subtitle">analog-agents works with a full EDA stack or purely with checklists, hand calcs, and cross-model review.</div>
+
+    <div class="modes-grid">
+      <div class="mode-card full-mode">
+        <div class="mode-tag">WITH EDA</div>
+        <h3>Full Mode</h3>
+        <ul>
+          <li>Complete simulation loop with Spectre</li>
+          <li>L3 PVT sign-off across all corners</li>
+          <li>Virtuoso migration via virtuoso-bridge</li>
+          <li>Automated post-sim hooks and spec checking</li>
+        </ul>
+      </div>
+      <div class="mode-card review-mode">
+        <div class="mode-tag">NO EDA</div>
+        <h3>Review Mode</h3>
+        <ul>
+          <li>Checklists + hand-calc verification</li>
+          <li>Cross-model audit (primary quality gate)</li>
+          <li>Design space exploration with equations</li>
+          <li>Interactive teaching and learning</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cross-Model Review -->
+<section class="levels-section" id="cross-model">
+  <div class="container">
+    <div class="section-label">Cross-Model Review</div>
+    <div class="section-title">Disagreement IS the Knowledge</div>
+    <div class="section-subtitle">Independent circuit audits dispatched to external models. Where they diverge, that's where the interesting design knowledge lives.</div>
+
+    <div class="model-pills">
+      <div class="model-pill">minimax</div>
+      <div class="model-pill">qwen</div>
+      <div class="model-pill">kimi</div>
+      <div class="model-pill">glm</div>
+    </div>
+
+    <p style="color:var(--text2);font-size:0.95rem;max-width:700px;margin-bottom:1.5rem">Each reviewer scores independently. Findings are merged into a unified report. Divergence analysis highlights where models disagree &mdash; these disagreements reveal non-obvious design tradeoffs and edge cases.</p>
+
+    <div class="consensus-table">
+      <table>
+        <thead>
+          <tr><th>Finding</th><th>minimax</th><th>qwen</th><th>kimi</th><th>glm</th><th>Consensus</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Insufficient Vds headroom on M3</td><td class="agree">&#x2713;</td><td class="agree">&#x2713;</td><td class="agree">&#x2713;</td><td class="agree">&#x2713;</td><td class="agree">4/4 agree</td></tr>
+          <tr><td>CMFB loop stability concern</td><td class="agree">&#x2713;</td><td class="agree">&#x2713;</td><td class="diverge">&#x2717;</td><td class="agree">&#x2713;</td><td class="diverge">3/4 diverge</td></tr>
+          <tr><td>Mismatch sensitivity in diff pair</td><td class="diverge">&#x2717;</td><td class="agree">&#x2713;</td><td class="agree">&#x2713;</td><td class="diverge">&#x2717;</td><td class="diverge">2/4 split</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Knowledge Graph -->
+<section id="knowledge-graph">
+  <div class="container">
+    <div class="section-label">Knowledge Graph</div>
+    <div class="section-title">Tacit Knowledge, Made Explicit</div>
+    <div class="section-subtitle">Following Polanyi's principle: the wiki captures what experienced engineers carry but rarely document.</div>
+
+    <p style="color:var(--text2);font-size:0.95rem;max-width:700px;margin-bottom:1.5rem">The <code style="color:var(--accent)">wiki/</code> directory is a persistent design knowledge base &mdash; structured YAML entries with typed edges between them. Every design session can contribute new entries. The knowledge compounds.</p>
+
+    <div class="kg-types">
+      <div class="kg-type">&#x1f4c1; topologies</div>
+      <div class="kg-type">&#x1f9e0; strategies</div>
+      <div class="kg-type">&#x26a0; anti-patterns</div>
+      <div class="kg-type">&#x1f321; corner-lessons</div>
+      <div class="kg-type">&#x1f4cb; project cases</div>
+    </div>
+
+    <div style="margin-top:1.5rem">
+      <div style="font-size:0.9rem;color:var(--text3);margin-bottom:0.5rem">Relationship types:</div>
+      <div class="kg-edges">
+        <div class="kg-edge">mitigates</div>
+        <div class="kg-edge">contradicts</div>
+        <div class="kg-edge">requires</div>
+        <div class="kg-edge">supersedes</div>
+        <div class="kg-edge">related-to</div>
+        <div class="kg-edge">derived-from</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Effort Levels -->
+<section class="levels-section" id="effort">
+  <div class="container">
+    <div class="section-label">Effort Levels</div>
+    <div class="section-title">Scale Verification to Your Phase</div>
+    <div class="section-subtitle">Don't run exhaustive PVT corners just to check if the circuit turns on.</div>
+
+    <div class="effort-grid">
+      <div class="effort-card">
+        <div class="effort-badge" style="background:rgba(34,197,94,0.15);color:var(--pass)">LITE</div>
+        <h3>Quick Sanity</h3>
+        <p>DC operating point + basic function at TT only. Fastest feedback loop.</p>
+        <div class="effort-use">Early exploration, initial sizing check</div>
+      </div>
+      <div class="effort-card">
+        <div class="effort-badge" style="background:rgba(59,130,246,0.15);color:var(--verifier)">STANDARD</div>
+        <h3>Normal Iteration</h3>
+        <p>L1 + L2 at TT corner. All key specs verified with margins.</p>
+        <div class="effort-use">Day-to-day design iteration</div>
+      </div>
+      <div class="effort-card">
+        <div class="effort-badge" style="background:rgba(245,158,11,0.15);color:var(--designer)">INTENSIVE</div>
+        <h3>Pre-Tapeout</h3>
+        <p>Full L1-L3 with PVT corners. Cross-model review included.</p>
+        <div class="effort-use">Design review, milestone gate</div>
+      </div>
+      <div class="effort-card">
+        <div class="effort-badge" style="background:rgba(239,68,68,0.15);color:var(--fail)">EXHAUSTIVE</div>
+        <h3>Sign-Off</h3>
+        <p>All corners, Monte Carlo, mismatch analysis, full cross-model review.</p>
+        <div class="effort-use">Final sign-off, tapeout readiness</div>
       </div>
     </div>
   </div>
@@ -570,7 +863,7 @@ footer a{color:var(--accent)}
 <section class="install-section" id="install">
   <div class="container">
     <div class="section-label">Get Started</div>
-    <div class="section-title">Four Steps to Your First Design</div>
+    <div class="section-title">Five Steps to Your First Design</div>
 
     <div class="install-steps">
       <div class="install-step">
@@ -584,23 +877,34 @@ footer a{color:var(--accent)}
         <div class="install-num">2</div>
         <div>
           <strong>Register the skill</strong>
-          <code>ln -s /path/to/analog-agents/skills/analog-agents ~/.claude/skills/analog-agents</code>
+          <code>ln -s /path/to/analog-agents/skills/analog-pipeline ~/.claude/skills/analog-pipeline</code>
         </div>
       </div>
       <div class="install-step">
         <div class="install-num">3</div>
+        <div>
+          <strong>(Optional) Enable cross-model review</strong>
+          <code>cp config/reviewers.example.yml config/reviewers.yml<br># Edit with your API keys for minimax, qwen, kimi, glm</code>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="install-num">4</div>
         <div>
           <strong>Configure servers</strong>
           <code>cp config/servers.example.yml config/servers.yml && vi config/servers.yml</code>
         </div>
       </div>
       <div class="install-step">
-        <div class="install-num">4</div>
+        <div class="install-num">5</div>
         <div>
           <strong>Create spec.yml and invoke</strong>
-          <code>Use the analog-agents skill. Design an OTA for spec.yml.</code>
+          <code>Use the analog-pipeline skill. Design an OTA for spec.yml.</code>
         </div>
       </div>
+    </div>
+
+    <div class="install-note">
+      <strong>No EDA?</strong> Skip step 4. analog-agents works in review mode without servers.yml &mdash; checklists, hand-calc verification, cross-model review, and design space exploration all work without simulation infrastructure.
     </div>
   </div>
 </section>
@@ -610,9 +914,10 @@ footer a{color:var(--accent)}
   <div class="footer-links">
     <a href="https://github.com/Arcadia-1/analog-agents">GitHub</a>
     <a href="https://github.com/Arcadia-1/analog-agents/issues">Issues</a>
+    <a href="https://github.com/Arcadia-1/analog-agents/tree/main/wiki">Wiki</a>
     <a href="https://github.com/Arcadia-1/virtuoso-bridge-lite">virtuoso-bridge</a>
   </div>
-  <p>Built by <a href="https://github.com/Arcadia-1">Arcadia-1</a> &mdash; agentic analog front-end design.</p>
+  <p>Built by <a href="https://github.com/Arcadia-1">Arcadia-1</a> &mdash; AI-native analog IC design, with or without EDA.</p>
 </footer>
 
 <script>
