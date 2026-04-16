@@ -187,6 +187,22 @@ Effort interaction:
 | intensive | Wiki + checklist evolution |
 | exhaustive | All 4 dimensions + full narrative |
 
+## Tool Backend
+
+All evolution analysis is powered by `tools/evolve_engine.py`:
+
+| Subcommand | Tool invocation |
+|-----------|-----------------|
+| `/analog-evolve review` | `python3 tools/evolve_engine.py review --project-dir . --wiki-dir wiki --checklists-dir checklists` |
+| `/analog-evolve wiki` | `python3 tools/evolve_engine.py wiki --project-dir . --wiki-dir wiki` |
+| `/analog-evolve checklist` | `python3 tools/evolve_engine.py checklist --project-dir . --checklists-dir checklists` |
+| `/analog-evolve preferences` | `python3 tools/evolve_engine.py preferences --project-dir . --wiki-dir wiki` |
+| `/analog-evolve status` | `python3 tools/evolve_engine.py status --wiki-dir wiki` |
+
+The tool reads design artifacts (iteration-log.yml, verifier-reports/, rationale.md),
+analyzes patterns, and outputs proposals in markdown. The skill (this SKILL.md)
+provides the context and judgment for interpreting proposals and deciding what to accept.
+
 ## Principles
 
 1. **Propose, never auto-apply.** All changes are presented to the user first.
