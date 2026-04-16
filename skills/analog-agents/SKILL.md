@@ -28,9 +28,11 @@ Use this skill when:
 - Preparing a verified netlist for Virtuoso migration
 
 Do NOT use for:
-- Pure simulation tasks on an existing verified netlist → use `spectre` skill directly
 - Verilog-A behavioral modeling only → use `veriloga` skill
 - Virtuoso schematic editing without a netlist → use `virtuoso` skill
+
+All circuit simulation and performance verification in this workflow are owned by the
+**verifier** agent, including simulation of existing netlists.
 
 ## Required Input
 
@@ -48,7 +50,7 @@ on creating a detailed spec. Instead, auto-generate a minimal `spec.yml` with
 | Block type | Functional defaults |
 |------------|-------------------|
 | Amplifier/OTA | All transistors in saturation (region ≤ 2), positive DC gain, output CM near target |
-| Comparator | Correct polarity output for positive/negative differential input |
+| Comparator | Correct polarity output, resolves within the evaluation window, and reports input-referred offset when measurable |
 | ADC | Correct digital codes for ramp input |
 | Oscillator | Oscillation at roughly target frequency |
 | Any block | DC operating point converges, no rail-stuck nodes, current balance at fold/mirror nodes |
@@ -116,7 +118,7 @@ top-level spec.yml
   architect agent (Phase 3)
   ├── replace behavioral models with verified netlists
   ├── integration testbench: top-level specs
-  └── output: integration margin-report.md
+  └── output: integration verifier-report.md
         │
         ▼
   sign-off gate ──► L3 PVT required
@@ -151,6 +153,12 @@ Even for a single sub-block, dispatch in background so the orchestrator can:
 
 The orchestrator is notified automatically when a background agent completes —
 do not poll or sleep.
+
+Operational exception: the orchestrator MAY inspect remote Spectre job state at any time
+for observability and debugging, for example with `virtuoso-bridge sim-jobs` (and
+`virtuoso-bridge sim-cancel <id>` if a stuck job must be terminated). This is only for
+simulation job monitoring; it must not replace agent-completion notifications or become
+the primary synchronization mechanism between agents.
 
 ### Verifier dispatch rule
 
@@ -207,7 +215,7 @@ Use the `designer-prompt.md` template. Provide:
 - Behavioral model `.va` as reference
 - Interface constraints from `architecture.md`
 - Path to current netlist (or "create from scratch")
-- Margin report from last verifier run (empty on first iteration)
+- Verifier report from last verifier run (empty on first iteration)
 - Server: value of `role_mapping.designer` in `servers.yml` (or `default`)
 
 ### Step 2 — Designer dispatches verifier automatically
@@ -222,7 +230,7 @@ designer produces netlist → dispatches verifier (background)
     ↓
 verifier simulates
     ├── PASS → reports convergence to orchestrator
-    ├── FAIL, iter < 3 → dispatches next designer (background) with margin report
+    ├── FAIL, iter < 3 → dispatches next designer (background) with verifier report
     └── FAIL, iter ≥ 3 → escalation report to orchestrator
 ```
 
@@ -241,7 +249,7 @@ The orchestrator acts only when:
    - Decide whether to proceed to L2 (if still at L1) or move to next sub-block
 
 2. **Escalation report received** (3× FAIL):
-   - Review all 3 margin reports
+   - Review all 3 verifier reports
    - Decide: revise sub-block spec, change topology, or escalate to user
    - If proceeding: dispatch architect with the trajectory data, then dispatch new designer (iteration 1)
 
@@ -304,8 +312,17 @@ to confirm basic functionality:
 - **Amplifier**: AC gain is positive and reasonable? Transient output follows input?
 - **PLL/oscillator**: does it oscillate at roughly the right frequency?
 
-L1 always includes `.op` (to check operating regions), but also `.tran` and/or `.ac`
-as needed to confirm the block's fundamental function works.
+L1 includes whatever analyses are needed to confirm the block's fundamental function
+works, usually `.tran` and optionally `.op`/`.ac` when they are actually informative.
+
+For **comparators**, prioritize:
+- input polarity / decision correctness
+- decision delay within the evaluation window
+- input-referred offset (or a documented estimate if full offset characterization is deferred)
+- metastability behavior near small overdrive
+
+For **comparators**, MOS operating region tables and current-balance checks are optional
+debug information, not primary acceptance criteria unless the user explicitly asks for them.
 
 The architect defines the L1 functional checks in `verification-plan.md`.
 
@@ -332,7 +349,7 @@ Architect must return: `architecture.md` + `budget.md` + sub-block `spec.yml` fi
 | Behavioral model `.va` path | ✓ |
 | Interface constraints from `architecture.md` | ✓ |
 | Netlist path or "create from scratch" | ✓ |
-| `margin-report.md` from last verifier run | ✓ (empty on first iteration) |
+| `verifier-report.md` from last verifier run | ✓ (empty on first iteration) |
 | Server name from `servers.yml` | ✓ |
 
 Designer must return: `<block>.scs` + `rationale.md`
@@ -353,7 +370,7 @@ Verifier first reviews both files. If issues found:
 - Testbench problem → rejection report routed to **architect**
 - No simulation is run (saves time)
 
-If approved: verifier runs simulation and returns `margin-report.md`
+If approved: verifier runs simulation and returns `verifier-report.md`
 
 ### Verifier FAIL → Designer (loop)
 
@@ -366,7 +383,7 @@ Designer response must update `rationale.md` explaining what changed and why.
 ### 3× FAIL escalation → Architect
 
 If a sub-block fails 3 iterations, escalate to architect with:
-- All 3 margin reports showing the trajectory
+- All 3 verifier reports showing the trajectory
 - Designer's rationale explaining what was attempted
 - Architect decides: revise sub-block spec, change topology, or escalate to user
 
@@ -375,10 +392,10 @@ If a sub-block fails 3 iterations, escalate to architect with:
 | Field | Required |
 |-------|----------|
 | All sub-block `.scs` netlists (L2 pass) | ✓ |
-| All sub-block `margin-report.md` | ✓ |
+| All sub-block `verifier-report.md` | ✓ |
 | Server name from `servers.yml` | ✓ |
 
-Architect must return: integration `margin-report.md` with top-level specs
+Architect must return: integration `verifier-report.md` with top-level specs
 
 ## Iteration Log
 
@@ -498,7 +515,7 @@ summary:
 | `iterations[].designer_changes` | orchestrator, from designer's `rationale.md` diff |
 | `iterations[].optimizer_used/config` | orchestrator, from designer's report |
 | `iterations[].verification_redo` | orchestrator, when verifier rejects pre-simulation |
-| `iterations[].results` | orchestrator, from verifier's `margin-report.md` |
+| `iterations[].results` | orchestrator, from verifier's `verifier-report.md` |
 | `summary.lessons_learned` | architect, at project completion |
 
 The orchestrator appends to `iteration-log.yml` after every handoff. Agents read it
@@ -535,9 +552,9 @@ Agent outputs are organized by owner — each agent writes only to its own area.
 ├── verifier-reports/                 # verifier 产出
 │   ├── L1-functional/
 │   │   ├── dc-op-point.md            # MOSFET table + nodes + currents (overwritten each run)
-│   │   └── <date>_<description>.md   # L1 pass/fail checklist (appended)
+│   │   └── <date>_<description>.md   # verifier report for L1 checks (appended)
 │   └── L2-performance/
-│       └── <date>_<description>.md   # spec margin table + analysis
+│       └── <date>_<description>.md   # verifier report with measured specs and margins
 │
 ├── librarian/                        # librarian 产出 (optional)
 │   ├── survey-report.md              # library survey: topology, connectivity, reusability
