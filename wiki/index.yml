@@ -1,3 +1,14 @@
 # analog-wiki entry index
-# Each entry: id -> path, type, one-line summary
-entries: {}
+entries:
+  anti-001:
+    path: anti-patterns/diode-load-cmfb-trap.yml
+    type: anti-pattern
+    summary: "Diode-load CMFB kills DM gain on high-Z nodes"
+  anti-002:
+    path: anti-patterns/vcm-half-vdd-pmos-input.yml
+    type: anti-pattern
+    summary: "Vcm=VDD/2 with PMOS input pair collapses tail headroom"
+  strat-001:
+    path: strategies/mixed-l-for-matching.yml
+    type: strategy
+    summary: "Use longer L for mirrors/cascodes, short L only for input pair"

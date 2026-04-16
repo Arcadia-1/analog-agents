@@ -1,0 +1,25 @@
+id: strat-001
+type: strategy
+name: "Mixed-L Strategy for Matching and Gain"
+tags: [sizing, matching, channel-length, mirror, cascode, gain]
+process_nodes: [28nm, 65nm]
+
+content:
+  description: >
+    Use short L (e.g., 60nm in 28nm process) only where speed matters —
+    typically the input pair. Use longer L (2-4x minimum) for bias mirrors,
+    current sources, and cascodes.
+  key_tradeoffs:
+    - "Speed vs matching: short L is faster but worse matching"
+    - "Short L everywhere causes excessive CLM, degraded mirror accuracy"
+  benefits:
+    - "Better matching on mirrors and current sources"
+    - "Lower gds -> higher intrinsic gain on cascode stacks"
+    - "More stable DC equilibria in folded structures"
+  when_to_use: "Always, unless the entire circuit is speed-critical"
+
+derived_from: []
+confidence: verified
+source: "prompts/designer-prompt.md step 8"
+created: 2026-04-16
+updated: 2026-04-16

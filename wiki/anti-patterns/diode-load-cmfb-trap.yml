@@ -1,0 +1,24 @@
+id: anti-001
+type: anti-pattern
+name: "Diode-Load CMFB Kills DM Gain"
+tags: [cmfb, diode-load, gain, ota, fully-differential]
+process_nodes: [28nm, 65nm, 180nm]
+
+content:
+  description: >
+    If the CMFB error amp uses diode-connected loads and its output directly
+    connects to the main OTA's PMOS load gate (a high-impedance node), the
+    diode converts that node to low impedance. The PMOS load becomes effectively
+    diode-connected, and DM gain collapses.
+  failure_mechanism: >
+    Diode-connected load impedance ~ 1/gm. Connected to high-Z node (cascode
+    output) that sets signal gain. Low impedance dominates, gain drops from
+    ~50dB to <10dB.
+  measured_impact: "23 dB -> 2.6 dB on a 5T FD OTA"
+  fix: "Use mirror-load error amp, or buffer/AC-couple the diode-load output"
+
+derived_from: []
+confidence: verified
+source: "shared-references/cmfb.md"
+created: 2026-04-16
+updated: 2026-04-16
