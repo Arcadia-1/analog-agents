@@ -48,6 +48,8 @@ Most AI tools treat analog design like software: write some code, run some tests
 
 analog-agents doesn't miss any of that.
 
+**v2** adds four new capabilities: a **design knowledge graph** that captures anti-patterns, strategies, and topology lessons as a searchable wiki; **cross-model review** that dispatches circuit audits to external models (minimax, qwen, kimi, glm) for independent verification; **topology-specific checklists** that enforce mandatory checks per circuit type; and **effort levels** that scale verification depth from lite to exhaustive.
+
 It dispatches four agents — a **librarian**, an **architect**, a **designer**, and a **verifier** — with distinct roles, strict permissions, and defined handoff contracts. The librarian surveys existing Virtuoso libraries. The architect decomposes the system, writes testbenches, and validates the architecture with behavioral models. The designer produces transistor-level netlists. The verifier reviews both the circuit and testbench before simulating. They iterate until every spec passes with margin.
 
 ```
@@ -252,20 +254,35 @@ Single-server teams: just define a `default` entry and skip `role_mapping`.
 git clone https://github.com/Arcadia-1/analog-agents.git
 ```
 
-**2. Register the skill with your coding agent**
+**2. Register skills with your coding agent**
 
+For the full pipeline (recommended):
 ```bash
-ln -s /path/to/analog-agents/skills/analog-agents ~/.claude/skills/analog-agents
+ln -s /path/to/analog-agents/skills/analog-pipeline ~/.claude/skills/analog-pipeline
 ```
 
-**3. Configure your servers**
+Or symlink individual skills as needed:
+```bash
+ln -s /path/to/analog-agents/skills/analog-design ~/.claude/skills/analog-design
+ln -s /path/to/analog-agents/skills/analog-verify ~/.claude/skills/analog-verify
+# ... etc
+```
+
+**3. (Optional) Enable cross-model review**
+
+```bash
+cp config/reviewers.example.yml config/reviewers.yml
+# Edit with your API keys for minimax, qwen, kimi, glm
+```
+
+**4. Configure your servers**
 
 ```bash
 cp config/servers.example.yml config/servers.yml
 # Edit with your host, user, and SSH key
 ```
 
-**4. Create a spec sheet in your project directory**
+**5. Create a spec sheet in your project directory**
 
 ```bash
 cat > spec.yml << 'EOF'
@@ -279,24 +296,62 @@ specs:
 EOF
 ```
 
-**5. Invoke the skill**
+**6. Invoke the skill**
 
 ```
-Use the analog-agents skill. Design an OTA for spec.yml.
+Use the analog-pipeline skill. Design an OTA for spec.yml.
 ```
 
 ## What's Inside
 
 ```
 analog-agents/
-├── skills/analog-agents/
-│   ├── SKILL.md                  # Master skill: workflow, convergence, sign-off gate
-│   ├── librarian-prompt.md       # Librarian agent template
+├── skills/
+│   ├── analog-pipeline/          # Full design pipeline orchestrator
+│   ├── analog-decompose/         # Architecture decomposition and budgeting
+│   ├── analog-behavioral/        # Behavioral model validation
+│   ├── analog-design/            # Transistor-level netlist design
+│   ├── analog-verify/            # Pre-sim review and simulation
+│   ├── analog-integrate/         # Integration verification and sign-off
+│   ├── analog-review/            # Cross-model circuit audit
+│   └── analog-wiki/              # Design knowledge graph
+├── prompts/
 │   ├── architect-prompt.md       # Architect agent template
 │   ├── designer-prompt.md        # Designer agent template
+│   ├── librarian-prompt.md       # Librarian agent template
 │   └── verifier-prompt.md        # Verifier agent template
+├── shared-references/
+│   ├── checklist-schema.md       # Checklist format spec
+│   ├── cmfb.md                   # CMFB design reference
+│   ├── effort-contract.md        # Effort level definitions
+│   ├── handoff-contracts.md      # Agent handoff protocols
+│   ├── review-protocol.md        # Cross-model review protocol
+│   └── wiki-schema.md            # Wiki entry schema
+├── checklists/                   # Topology-specific verification checklists
+│   ├── common.yml                # Universal checks (all circuits)
+│   ├── amplifier.yml             # OTA / amplifier checks
+│   ├── folded_cascode.yml        # Folded cascode specific
+│   ├── differential.yml          # Fully-differential checks
+│   ├── comparator.yml            # Comparator checks
+│   ├── adc.yml                   # ADC checks
+│   ├── current-mirror.yml        # Current mirror checks
+│   ├── bandgap.yml               # Bandgap reference checks
+│   ├── ldo.yml                   # LDO regulator checks
+│   └── pll.yml                   # PLL checks
+├── wiki/                         # Design knowledge graph
+│   ├── index.yml                 # Entry index
+│   ├── edges.jsonl               # Relationship edges
+│   ├── anti-patterns/            # Known failure modes
+│   ├── strategies/               # Design strategies
+│   ├── topologies/               # Topology knowledge
+│   └── corner-lessons/           # PVT corner lessons
 ├── config/
-│   └── servers.example.yml       # Multi-server config template
+│   ├── servers.example.yml       # Multi-server config template
+│   ├── reviewers.example.yml     # Cross-model reviewer config
+│   └── effort.yml                # Default effort level
+├── tools/
+│   ├── review_bridge.py          # Cross-model review dispatcher
+│   └── wiki_ops.py               # Wiki search/add/consult operations
 ├── hooks/
 │   ├── hooks.json                # Hook event registration
 │   ├── session-start             # Inject skill + check bridge + read spec on startup
@@ -306,6 +361,48 @@ analog-agents/
 │   └── session-summary.sh        # End-of-session summary
 └── docs/specs/                   # Design documents
 ```
+
+## Skills
+
+| Skill | Description |
+|-------|-------------|
+| `/analog-pipeline` | Full design pipeline orchestrator |
+| `/analog-decompose` | Architecture decomposition and budgeting |
+| `/analog-behavioral` | Behavioral model validation |
+| `/analog-design` | Transistor-level netlist design |
+| `/analog-verify` | Pre-sim review and simulation |
+| `/analog-integrate` | Integration verification and sign-off |
+| `/analog-review` | Cross-model circuit audit (minimax, qwen, kimi, glm) |
+| `/analog-wiki` | Design knowledge graph |
+
+## Effort Levels
+
+Scale verification depth to match your design phase:
+
+| Level | When | Scope |
+|-------|------|-------|
+| **lite** | Quick sanity check | DC op + basic function at TT only |
+| **standard** | Normal design iteration | L1 + L2 at TT, key specs |
+| **intensive** | Pre-tapeout review | Full L1-L3 with PVT corners |
+| **exhaustive** | Sign-off | All corners, Monte Carlo, mismatch, cross-model review |
+
+See `shared-references/effort-contract.md` for full definitions.
+
+## Cross-Model Review
+
+Independent circuit audits dispatched to external models for a second opinion. Supported models: **minimax**, **qwen**, **kimi**, **glm**.
+
+The review bridge (`tools/review_bridge.py`) sends the netlist, spec, and rationale to one or more external models and collects structured findings. Each reviewer scores independently, and findings are merged into a unified report.
+
+Copy `config/reviewers.example.yml` to `config/reviewers.yml` and add your API keys to enable cross-model review.
+
+## Knowledge Graph
+
+The `wiki/` directory is a persistent design knowledge base — anti-patterns, strategies, topology lessons, and corner-case gotchas captured as structured YAML entries with typed edges between them.
+
+Following Polanyi's principle, the wiki captures tacit design knowledge that experienced engineers carry but rarely document — the kind of knowledge that prevents a team from repeating the same mistakes across projects.
+
+Use the `/analog-wiki` skill to search, consult, and contribute to the knowledge graph.
 
 ## Philosophy
 
