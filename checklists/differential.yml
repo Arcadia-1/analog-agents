@@ -7,6 +7,9 @@ symmetry:
   description: "Differential half-circuits must have identical device sizing"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     Identify diff pairs by topology (shared source/tail).
     For each pair (M1/M2, M3/M4, etc.), verify:
@@ -17,6 +20,9 @@ cmfb_exists:
   description: "Fully-differential circuit must have CMFB"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     A fully-differential output without CMFB has undefined output CM.
     Check for either:
@@ -28,6 +34,9 @@ cmfb_polarity:
   description: "CMFB must have negative feedback polarity"
   method: semantic
   severity: error
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     Trace the CMFB loop:
     1. Output CM rises →
@@ -41,6 +50,9 @@ cmfb_sensing_balance:
   description: "CM sensing resistors/caps must be equal on both outputs"
   method: structural
   severity: warn
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     Rcm1 == Rcm2, Ccm1 == Ccm2.
     Mismatch converts differential signal to CM error.
@@ -49,6 +61,9 @@ cmfb_error_amp_bias:
   description: "CMFB error amplifier must have its own valid bias point"
   method: semantic
   severity: error
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     The CMFB error amp tail current source needs a valid gate bias.
     If it shares the same bias as the main path, check that the
@@ -59,6 +74,9 @@ cm_reference_source:
   description: "CMFB reference voltage must be explicitly defined"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     There must be a voltage source or bias network setting the
     target output CM. Check that Vcmref exists and is connected
@@ -68,6 +86,9 @@ output_cm_vs_input_cm:
   description: "Output CM and input CM may need to be different"
   method: semantic
   severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     For PMOS input: output CM can be near VDD/2.
     For NMOS input: output CM can be near VDD/2.

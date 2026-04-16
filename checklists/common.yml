@@ -12,6 +12,9 @@ floating_nodes:
   description: "Every net must have at least one DC path to a supply or ground"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     For each net in the subcircuit, check that it connects to at least
     2 device terminals. A net with only 1 connection is dangling.
@@ -21,6 +24,9 @@ bulk_connections:
   description: "PMOS bulk → VDD (or source), NMOS bulk → VSS"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     Parse each MOSFET instance. 4th terminal is bulk.
     PMOS (pch_*): must be VDD or the source net.
@@ -31,6 +37,9 @@ mirror_ratio_vs_comment:
   description: "Actual W*nf ratio matches the intended current ratio in comments"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     Identify mirror pairs: devices sharing the same gate net and same type.
     Compute ratio = (W*nf)_mirror / (W*nf)_ref.
@@ -41,6 +50,9 @@ supply_connections:
   description: "VDD and VSS actually connect to the top-level ports"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     Verify subcircuit has VDD and VSS (or equivalent) in port list.
     Every device needing supply is connected to these nets, not to
@@ -50,6 +62,9 @@ parameter_sanity:
   description: "No zero-width, zero-length, or negative device parameters"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     For every MOSFET: W > 0, L > min_L (process dependent).
     For every R: r > 0. For every C: c >= 0.
@@ -59,6 +74,9 @@ bias_source_exists:
   description: "Every bias net has a DC path to a current or voltage source"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     Trace each gate net of current-source MOSFETs back to either:
     (a) a diode-connected device with a current source, or
@@ -69,6 +87,9 @@ dc_path_to_output:
   description: "Output nodes have a DC path to both VDD and VSS"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     From each output port, trace through devices (on-resistance)
     to VDD and to VSS. If either path is missing, the output
@@ -78,6 +99,9 @@ testbench_pin_match:
   description: "Testbench instantiation matches subcircuit port order"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     Compare the subcircuit definition port list with the testbench
     instantiation. Positional mismatch = swapped signals.

@@ -7,6 +7,9 @@ fold_node_kcl:
   description: "Current balance at the fold node: I_fold_CS = I_input/2 + I_output"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     Identify the fold node (where input pair drain meets fold CS drain
     and cascode source).
@@ -24,6 +27,9 @@ fold_cs_vs_tail_current:
   description: "Fold CS current must exceed half the tail current"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     I_fold > I_tail/2 is required, otherwise I_output goes negative
     (physically: the fold CS cannot sink all the input current,
@@ -34,6 +40,9 @@ input_vcm_headroom:
   description: "Input CM must leave room for tail current source"
   method: estimate
   severity: error
+  effort: lite
+  auto_checkable: false
+  references: []
   how: >
     THIS IS THE MOST COMMON FOLDED-CASCODE FAILURE MODE.
 
@@ -55,6 +64,9 @@ cascode_headroom_nmos:
   description: "NMOS cascode + CS stack fits below fold node"
   method: estimate
   severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     Fold node voltage (PMOS input case):
       V_fold ~ Vcm + |Vsg_input|  (drain of input PMOS)
@@ -67,6 +79,9 @@ cascode_headroom_pmos:
   description: "PMOS cascode + load stack fits above output node"
   method: estimate
   severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     From VDD down: |Vdsat_top| + |Vdsat_cas|
     Output must be above: VSS + Vdsat_nmos_cs + Vdsat_nmos_cas
@@ -77,6 +92,9 @@ pmos_load_topology:
   description: "PMOS load: is it current source or cascode? Check gate connection"
   method: semantic
   severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     Common confusion:
     - Current source: gate to fixed bias → sets I_output independently
@@ -92,6 +110,9 @@ bias_chain_tracking:
   description: "Cascode bias devices should track signal-path devices"
   method: semantic
   severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     The cascode bias chain (diode-stack generating VBN2, VBP3)
     should use the same device flavor (ulvt/lvt/svt) and similar

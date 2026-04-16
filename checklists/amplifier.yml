@@ -7,6 +7,9 @@ gain_path_continuity:
   description: "Signal path from input to output must be continuous"
   method: structural
   severity: error
+  effort: lite
+  auto_checkable: true
+  references: []
   how: >
     Trace: input gate → drain (gain node) → [cascode] → output.
     Every node in the chain must connect to the next stage.
@@ -16,6 +19,9 @@ input_pair_type_vs_vcm:
   description: "Input pair type must be compatible with input common-mode"
   method: estimate
   severity: error
+  effort: lite
+  auto_checkable: false
+  references: []
   how: >
     PMOS input pair: needs Vcm LOW enough so that
       VDD - |Vsg_input| - |Vdsat_tail| > 0  →  Vcm < VDD - |Vsg| - |Vdsat|
@@ -30,6 +36,9 @@ tail_headroom:
   description: "Tail current source must have enough Vds to stay in saturation"
   method: estimate
   severity: error
+  effort: lite
+  auto_checkable: false
+  references: []
   how: >
     For PMOS tail (above PMOS input pair):
       |Vds_tail| = VDD - V_source_of_input_pair
@@ -46,6 +55,9 @@ cascode_bias_voltage:
   description: "Cascode gate bias must keep both stacked devices in saturation"
   method: estimate
   severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     NMOS cascode (M_cas on top of M_cs):
       Vg_cas should be ~ Vgs + Vdsat above VSS
@@ -60,6 +72,9 @@ output_headroom_stack:
   description: "Total Vdsat stack must fit within output swing"
   method: estimate
   severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     At the output node, count Vdsat drops from VDD to output
     and from output to VSS:
@@ -73,6 +88,9 @@ compensation:
   description: "Multi-stage amplifiers need frequency compensation"
   method: semantic
   severity: warn
+  effort: standard
+  auto_checkable: false
+  references: []
   how: >
     Single-stage (e.g., folded cascode): load cap is compensation.
     Two-stage (e.g., with output buffer): needs Miller cap or other.
