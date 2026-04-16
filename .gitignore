@@ -11,3 +11,7 @@ __pycache__/
 sim-log.yml
 margin-report.md
 spectre.out
+
+wiki/projects/
+config/reviewers.yml
+config/effort.yml
