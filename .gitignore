@@ -9,9 +9,6 @@ __pycache__/
 Thumbs.db
 .DS_Store
 
-# ── Nested repos (cloned into this tree, have their own git) ──
-virtuoso-bridge-lite/
-
 # ── Per-user lockfile (virtuoso-bridge is editable, pin nothing) ──
 uv.lock
 

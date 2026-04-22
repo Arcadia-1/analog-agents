@@ -256,10 +256,12 @@ Single-server teams: just define a `default` entry and skip `role_mapping`.
 
 ## Installation
 
-**1. Clone the repo**
+**1. Clone the repo** (include the `virtuoso-bridge-lite` submodule)
 
 ```bash
-git clone https://github.com/Arcadia-1/analog-agents.git
+git clone --recurse-submodules https://github.com/Arcadia-1/analog-agents.git
+# or, if you already cloned without --recurse-submodules:
+# git submodule update --init
 ```
 
 **2. Register skills with your coding agent**

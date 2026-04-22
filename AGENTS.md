@@ -9,9 +9,14 @@ in this repo.
 1. **Python**: use `H:/analog-agents/.venv/Scripts/python.exe` — the project is
    editable-installed against a local clone of the bridge. Never use the
    global Python.
-2. **Bridge source**: `virtuoso-bridge-lite/` at project root is an editable
-   clone; changes to it take effect immediately. Don't commit this directory
-   to the analog-agents repo (it's its own git repo; already gitignored).
+2. **Bridge source**: `virtuoso-bridge-lite/` at project root is a git
+   **submodule** tracking `Arcadia-1/virtuoso-bridge-lite`, editable-installed
+   into `.venv`. Fresh clones must use `git clone --recurse-submodules`
+   (or `git submodule update --init` after a plain clone). Local edits take
+   effect immediately; `cd virtuoso-bridge-lite && git pull` advances it
+   without touching the parent pointer (parent `git status` will show the
+   submodule as "dirty" — that's expected, ignore unless you want to bump
+   the baseline for new clones).
 3. **Local context**: `local/context.yml` summarizes remote hosts, PDK paths,
    projects, and usernames — read it once to orient yourself without
    re-probing the environment.
@@ -30,7 +35,7 @@ in this repo.
 | `output/` | Runtime artifacts: snapshots, downloads. May contain absolute paths. | ❌ |
 | `example_artifacts/` | Raw + sanitized sample files for testing the sanitizer. | ❌ |
 | `local/` | Workstation-local state: `context.yml`, `sanitize-map.yml`, caches. | ❌ |
-| `virtuoso-bridge-lite/` | Editable clone of the upstream bridge. | ❌ |
+| `virtuoso-bridge-lite/` | Git submodule of the upstream bridge (editable-installed). | ✅ (submodule) |
 | `skills/` | Slash-command skill definitions consumed by Claude Code. | ✅ |
 | `wiki/` | Knowledge graph: blocks, lessons, anti-patterns, strategies. | ✅ (except `projects/`) |
 | `checklists/` | Per-phase checklists referenced by workflows. | ✅ |
@@ -136,9 +141,15 @@ export GIT_SSL_NO_VERIFY=true                # proxy MITMs TLS
 
 ## Bridge changes workflow
 
-- `virtuoso-bridge-lite/` is editable, so local edits apply immediately.
-- To land a change upstream: commit inside the clone, push to
+- `virtuoso-bridge-lite/` is a submodule and editable-installed; local
+  edits apply immediately to `.venv`.
+- To land a change upstream: commit inside the submodule, push to
   `origin/main` (`Arcadia-1/virtuoso-bridge-lite`).
+- `cd virtuoso-bridge-lite && git pull` to stay current. The parent
+  `git status` will show the submodule as dirty — ignore unless you want
+  every future `git clone --recurse-submodules` of the parent to land on
+  this commit, in which case `git add virtuoso-bridge-lite && git commit`
+  to bump the baseline.
 - Don't pin a SHA in `pyproject.toml` — we're on local path install. If
   you ever swap back to a git URL install, pin to a specific commit, not
   a branch.
@@ -170,8 +181,9 @@ new information:
 
 ## Don'ts
 
-- Don't commit `output/`, `local/`, `example_artifacts/`, `tmp/`, or
-  `virtuoso-bridge-lite/` — all gitignored for good reason.
+- Don't commit `output/`, `local/`, `example_artifacts/`, or `tmp/` —
+  all gitignored for good reason. (`virtuoso-bridge-lite/` is a submodule,
+  not gitignored; edits inside it belong upstream.)
 - Don't write throwaway scripts into `tools/` — use `tmp/`.
 - Don't directly edit `virtuoso-bridge-lite/` files unless you also intend
   to push the change upstream; the editable install makes silent edits
