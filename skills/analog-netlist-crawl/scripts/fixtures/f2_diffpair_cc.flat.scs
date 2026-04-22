@@ -1,0 +1,9 @@
+// Fixture F2: diff-pair with coupling (Spectre flat).
+// See f2_diffpair_cc.mrpp header for circuit + expected values.
+simulator lang=spectre
+
+r_IP_A (nIP nA)  resistor r=5.0
+r_A_OP (nA  nOP) resistor r=5.0
+r_IN_B (nIN nB)  resistor r=5.0
+r_B_ON (nB  nON) resistor r=5.0
+cc_A_B (nA  nB)  capacitor c=1e-15

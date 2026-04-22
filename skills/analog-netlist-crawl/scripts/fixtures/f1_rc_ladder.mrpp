@@ -1,0 +1,22 @@
+; DESIGN "F1_RC_LADDER"
+; Fixture — one-screen RC ladder for kernel validation (Calibre mr_pp format).
+;
+; Circuit:
+;     n1 --[R1=10]-- n2 --[R2=20]-- n3 --[R3=30]-- n4
+;                     |
+;                   [Cg=1fF]
+;                     |
+;                    VSS
+;
+; Expected (all values in ohms or farads):
+;     R_eff(n1, n4) = 60        simple series, no parallel paths
+;     R_eff(n1, n2) = 10
+;     R_eff(n2, n4) = 50
+;     Sum Cg per net = {n2: 1e-15}
+;     Sum Cc per pair = {}     (no coupling caps)
+;
+mr_pp 'r "r_1"       '("n1" "n2") 10.0
+mr_pp 'r "r_2"       '("n2" "n3") 20.0
+mr_pp 'r "r_3"       '("n3" "n4") 30.0
+mr_pp 'c "ci_n2_gnd" '("n2" "VSS") 1e-15
+mgc_rve_cell_end

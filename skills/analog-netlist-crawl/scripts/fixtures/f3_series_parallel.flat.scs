@@ -1,0 +1,20 @@
+// Fixture F3: series/parallel R correctness anchor.
+// See f3_series_parallel.mrpp header for circuit + expected values.
+simulator lang=spectre
+
+// 3a — pure parallel pair
+r_3a_1  (a1 a2)            resistor r=10.0
+r_3a_2  (a1 a2)            resistor r=30.0
+
+// 3b — symmetric diamond (no bridge)
+r_3b_TL (b_top   b_mid_L)  resistor r=10.0
+r_3b_ML (b_mid_L b_bot)    resistor r=20.0
+r_3b_TR (b_top   b_mid_R)  resistor r=10.0
+r_3b_MR (b_mid_R b_bot)    resistor r=20.0
+
+// 3c — asymmetric Wheatstone bridge
+r_3c_1  (c_top c_L)   resistor r=10.0
+r_3c_2  (c_top c_R)   resistor r=20.0
+r_3c_3  (c_L   c_bot) resistor r=40.0
+r_3c_4  (c_R   c_bot) resistor r=60.0
+r_3c_5  (c_L   c_R)   resistor r=100.0

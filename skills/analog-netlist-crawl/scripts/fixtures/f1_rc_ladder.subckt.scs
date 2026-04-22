@@ -1,0 +1,10 @@
+// Fixture F1: RC ladder (Spectre with DUT subckt wrapper).
+// See f1_rc_ladder.mrpp header for circuit + expected values.
+simulator lang=spectre
+
+subckt F1_DUT (n1 n4)
+  r_1       (n1 n2) resistor r=10.0
+  r_2       (n2 n3) resistor r=20.0
+  r_3       (n3 n4) resistor r=30.0
+  ci_n2_gnd (n2 VSS) capacitor c=1e-15
+ends F1_DUT

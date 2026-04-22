@@ -1,19 +1,47 @@
-# Real server credentials — never commit
-config/servers.yml
-
-# Python
+# ── Python ─────────────────────────────────────────────
 __pycache__/
 *.pyc
 .venv/
 
-# Simulation outputs
+# ── Editors / OS ───────────────────────────────────────
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+
+# ── Nested repos (cloned into this tree, have their own git) ──
+virtuoso-bridge-lite/
+
+# ── Per-user lockfile (virtuoso-bridge is editable, pin nothing) ──
+uv.lock
+
+# ── Credentials & per-user config — never commit ──────
+config/servers.yml
+config/reviewers.yml
+config/effort.yml
+
+# ── Workstation-local state (context / maps / scratch) ─
+local/
+
+# ── Run-time outputs (may contain absolute paths, usernames, PDKs) ──
+output/
+example_artifacts/
+
+# ── Throwaway scripts, experiments ─────────────────────
+tmp/
+
+# ── Simulation intermediate / artifact files ───────────
 *.raw/
 sim-log.yml
 margin-report.md
 spectre.out
 
+# ── Iteration-specific wiki content ────────────────────
 wiki/projects/
-config/reviewers.yml
-config/effort.yml
-
 wiki/user-preferences.yml
+
+# ── Reference docs copied locally (have their own source) ──
+skill-api-reference/
+
+WORK/
+WORK_DATA/

@@ -1,0 +1,23 @@
+; DESIGN "F2_DIFFPAIR_CC"
+; Fixture — symmetric diff-pair halves joined by a single coupling cap.
+;
+; Circuit:
+;     nIP --[R=5]-- nA --[R=5]-- nOP
+;                    |
+;                  [Cc=1fF]
+;                    |
+;     nIN --[R=5]-- nB --[R=5]-- nON
+;
+; Expected:
+;     R_eff(nIP, nOP) = 10
+;     R_eff(nIN, nON) = 10
+;     R_eff(nA, nB)   = +inf  (Cc carries no DC current; no path)
+;     Sum Cg per net  = {}
+;     Sum Cc per pair = {(nA, nB): 1e-15}
+;
+mr_pp 'r "r_IP_A" '("nIP" "nA")  5.0
+mr_pp 'r "r_A_OP" '("nA"  "nOP") 5.0
+mr_pp 'r "r_IN_B" '("nIN" "nB")  5.0
+mr_pp 'r "r_B_ON" '("nB"  "nON") 5.0
+mr_pp 'c "cc_A_B" '("nA"  "nB")  1e-15
+mgc_rve_cell_end

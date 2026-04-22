@@ -1,0 +1,47 @@
+; DESIGN "F3_SERIES_PARALLEL"
+; Fixture — four R-network sub-topologies with closed-form answers.
+; This is the primary correctness anchor for the Laplacian kernel on
+; real series/parallel combinations — F1 was only pure series.
+;
+; Sub-circuit 3a — two pure parallel R's:
+;     a1 --[R=10]-- a2
+;     a1 --[R=30]-- a2
+;     R_eff(a1, a2) = 10 || 30 = 7.5
+;
+; Sub-circuit 3b — symmetric diamond (no bridge):
+;     b_top --[R=10]-- b_mid_L --[R=20]-- b_bot
+;     b_top --[R=10]-- b_mid_R --[R=20]-- b_bot
+;     R_eff(b_top, b_bot) = (10+20) || (10+20) = 30 || 30 = 15
+;
+; Sub-circuit 3c — asymmetric Wheatstone bridge (the hard one):
+;              c_top
+;              /    \
+;            R1=10  R2=20
+;            /        \
+;         c_L -R5=100- c_R
+;            \        /
+;            R3=40  R4=60
+;              \    /
+;              c_bot
+;     KCL gives V_L=98/123, V_R=31/41, I_in=4/123.
+;     R_eff(c_top, c_bot) = 123/4 = 30.75  (exact)
+;
+; Sub-circuit 3d — parallel across disjoint components:
+;     Seeds {a1, b_top} shorted as source,
+;     seeds {a2, b_bot} shorted as sink.
+;     R_eff = 7.5 || 15 = 5.0
+;     (Stress-tests the solver's behaviour when a seed set spans two
+;      R-connected components.)
+;
+mr_pp 'r "r_3a_1"    '("a1"    "a2")      10.0
+mr_pp 'r "r_3a_2"    '("a1"    "a2")      30.0
+mr_pp 'r "r_3b_TL"   '("b_top" "b_mid_L") 10.0
+mr_pp 'r "r_3b_ML"   '("b_mid_L" "b_bot") 20.0
+mr_pp 'r "r_3b_TR"   '("b_top" "b_mid_R") 10.0
+mr_pp 'r "r_3b_MR"   '("b_mid_R" "b_bot") 20.0
+mr_pp 'r "r_3c_1"    '("c_top" "c_L")     10.0
+mr_pp 'r "r_3c_2"    '("c_top" "c_R")     20.0
+mr_pp 'r "r_3c_3"    '("c_L"   "c_bot")   40.0
+mr_pp 'r "r_3c_4"    '("c_R"   "c_bot")   60.0
+mr_pp 'r "r_3c_5"    '("c_L"   "c_R")     100.0
+mgc_rve_cell_end

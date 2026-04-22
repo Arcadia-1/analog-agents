@@ -1,0 +1,32 @@
+// Fixture F4: within-net pin-to-pin R anchor.
+//
+// One logical net VREFN split by parasitic R into four subnodes:
+//
+//     VREFN_1 --[R=1]-- VREFN_2 --[R=2]-- VREFN_3 --[R=3]-- VREFN_4
+//
+// Each subnode has a MOSFET gate on it, so the adapter should pick
+// them up as "pin touches on net VREFN" via canonicalize('VREFN_N') →
+// 'VREFN'.  within_net_pin_r(circuit, 'VREFN') must find 4 pins and
+// return R_eff values from series addition:
+//
+//     R(VREFN_1, VREFN_2) = 1
+//     R(VREFN_2, VREFN_3) = 2
+//     R(VREFN_3, VREFN_4) = 3
+//     R(VREFN_1, VREFN_3) = 3
+//     R(VREFN_2, VREFN_4) = 5
+//     R(VREFN_1, VREFN_4) = 6    ← the "electrically-farthest" pair
+//
+// Dummy drain/source/bulk nodes are unique per MOSFET so they don't
+// get folded together.
+simulator lang=spectre
+
+// Parasitic R spine along VREFN
+r_1 (VREFN_1 VREFN_2) resistor r=1.0
+r_2 (VREFN_2 VREFN_3) resistor r=2.0
+r_3 (VREFN_3 VREFN_4) resistor r=3.0
+
+// Four MOSFETs, each with gate on one VREFN subnode
+m1 (d1 VREFN_1 s1 b1) nch_mac w=1u l=28n
+m2 (d2 VREFN_2 s2 b2) nch_mac w=1u l=28n
+m3 (d3 VREFN_3 s3 b3) nch_mac w=1u l=28n
+m4 (d4 VREFN_4 s4 b4) nch_mac w=1u l=28n

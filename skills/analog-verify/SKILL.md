@@ -128,6 +128,23 @@ The skill provides:
 - Server configuration and `.env` setup
 - Parallel simulation patterns for corners and variant sweeps
 
+## Rule: parse our own Spectre runs only
+
+Never parse Maestro's `*.sdb` / `*.rdb` to extract simulation data. Always:
+
+1. Feed the circuit + TB netlist to `SpectreSimulator.run_simulation()` ourselves
+   (it invokes Spectre with `-format psfascii`, giving us plain-text PSF).
+2. Parse `dcOp.dc` / `dcOpInfo.info` / `<analysis>.<type>` from
+   `{output_dir}/input.raw/` directly with regex / struct parsers.
+
+Maestro DBs are a GUI-coupled, version-dependent internal format (SQLite schema
+drifts between releases, numeric BLOBs may be binary PSF, path layout changes
+with Assembler vs Explorer). Binding to them kills portability of the verifier
+and pins it to one Virtuoso version.
+
+Work directory convention: one folder per TB run, named `<YYYYMMDD_HHMMSS>__<TB_cell>/`
+with `netlist/` (inputs) and `results/` (PSF ASCII + parsed CSV/md) subdirs.
+
 ## Your Permissions
 
 - **Read-only**: circuit netlist files (`.scs`, `.sp`, `.net`), `spec.yml`, `verification-plan.md`
@@ -239,6 +256,126 @@ Red flags:
 - gm/Id > 25 or < 5
 - |Vds| < 50mV on devices expected in saturation
 - self-gain < 5 on cascode or current-source devices
+
+#### How to record & parse DC op points
+
+Five things that bite you the first time you write a verifier from scratch.
+
+**1. `save` syntax — keep the extractor's `\@` escape**
+
+Layout-extracted finger names carry a backslash before `@`, and Spectre wants it
+verbatim in the save statement:
+
+```spectre
+save I1.MM0:gm  I1.MM0:ids  I1.MM0:vth  I1.MM0:vds  I1.MM0:cgg  I1.MM0:region \
+     I1.MM0\@2:gm  I1.MM0\@2:ids  I1.MM0\@2:vth  ...          // finger #2
+```
+
+Bus bits: `save X<3\>:ids`. Hierarchy separator is `.`.
+Useful fields for the MOSFET table: `ids vgs vds vbs vth vdsat gm gds cgg region`
+(plus `cgs cgd cgb gmbs` if noise/mismatch analysis is on the agenda).
+
+**2. Pick `dcOp.dc` over `dcOpInfo.info` by default**
+
+| Goal | File | How to read |
+|---|---|---|
+| A few fields, programmatic | **`dcOp.dc`** via `save Mx:field` | one-line regex |
+| Full op-point dump (all MOS × 98 fields) | `dcOpInfo.info` via `dcOpInfo info what=oppoint where=rawfile` | nested PSF struct parser |
+
+Verifier default: explicit `save Mx:field`. Smaller raw, simpler parser, no struct
+handling. Only reach for `dcOpInfo.info` when you actively need every BSIM field
+for all devices (cross-study, mismatch analysis).
+
+**3. Gotcha — `SpectreSimulator.result.data` does not carry DC scalars**
+
+The PSF-to-dict parser skips single-point op-point signals. Read them directly from
+`{output_dir}/dcOp.dc`:
+
+```python
+import re
+from pathlib import Path
+
+SCALAR_RE = re.compile(r'^"([^"]+)"\s+"([^"]*)"\s+([-+\deE.]+)\s+PROP\(')
+# matches:  "I1.MM0:gm" "S" 1.019e-03 PROP(...)
+
+def read_dcop(raw_dir: Path) -> dict[str, float]:
+    out = {}
+    for ln in (raw_dir / "dcOp.dc").read_text(encoding="utf-8").splitlines():
+        m = SCALAR_RE.match(ln)
+        if m:
+            out[m.group(1)] = float(m.group(3))
+    return out
+```
+
+**4. `region` is an integer, map before printing**
+
+Spectre writes an enum code, not a string. Translate to the names the verifier
+table expects:
+
+```python
+REGION = {0: "off", 1: "linear", 2: "sat", 3: "subth", 4: "breakdown"}
+```
+
+**5. Finger aggregation — one row per schematic device**
+
+Extracted netlists split a schematic MOSFET into N finger sub-devices:
+`I1.MM0, I1.MM0\@2, I1.MM0\@3, …`. For the verifier's table, collapse them:
+
+- group by prefix (`I1.MM0` and `I1.MM0\@*` → one row)
+- **sum**  `Id`, `gm`, `Cgg` across fingers
+- **take first** for `Vgs / Vds / Vbs / Vth / Vdsat` (fingers are near-identical)
+- derived: `gm/Id = Σgm / Σ|Id|`,  `ft = Σgm / (2π · ΣCgg)`,  `self-gain = Σgm / Σgds`
+
+Without this step the MOSFET table has 3–8 extra rows per schematic device and
+the Red-flag rules fire on individual fingers instead of the full transistor.
+
+**6. Beyond `Mx:field` — two more save idioms you will need**
+
+`save <inst>:<field>` is only one of four save shapes. The others unlock branch
+currents and supply draw, and the verifier will want them for the current budget
+row and power/PSRR columns.
+
+| Syntax | Meaning | Typical use |
+|---|---|---|
+| `<node>` | node voltage | stimulus / output traces |
+| `<inst>:<N>` | current into subckt pin **N** (1-indexed per its declaration) | DUT branch currents, per-pin power |
+| `V<name>:p` | current out of the vsource positive terminal | per-rail supply current |
+| `<inst>:<field>` | op-point scalar on a primitive / subckt instance | MOS op table, derived fields |
+
+Example from a real 5T OTA testbench (the pin order comes from the subckt
+declaration, not from the schematic order):
+
+```spectre
+// subckt AMP_5T_D2S_schematic I_DOWN VDD VIN VIP VOUT VSS   // pins 1..6
+save I1:2  I1:6            // currents into the DUT's VDD (2) and VSS (6)
+save V1:p                  // total supply current out of V1 — cleanest IDD probe
+```
+
+`<inst>:<N>` is more reliable than `Σ ids` across MOS fingers because it captures
+parasitic and mismatch currents flowing through the pin, not just the device
+channels.
+
+**7. Derived MOS fields Spectre computes for you**
+
+Per-finger derived fields are native save tokens — no hand-calculation:
+
+| Field       | Meaning                     | When to use |
+|-------------|-----------------------------|-------------|
+| `gmoverid`  | `gm / Id`                   | sweet-spot / weak-inversion checks |
+| `self_gain` | `gm / gds` (intrinsic gain) | cascode / current-source quality |
+| `ft`        | unity-gain frequency        | BW estimate per device |
+| `fug`       | same as `ft` on some models | use whichever the PDK exposes |
+
+Save them directly:
+
+```spectre
+save I1.M0:gmoverid I1.M0:self_gain I1.M0:ft  I1.M0:fug
+```
+
+These are **per-finger** values. When aggregating fingers (see rule 5), the
+per-finger `self_gain` / `gmoverid` are fine to take from the first finger, but
+if the fingers differ noticeably (layout effects, boundary dummies), recompute
+from the summed `Σgm / Σgds`, `Σgm / Σ|Id|`.
 
 #### Fully Differential PSRR/CMRR
 

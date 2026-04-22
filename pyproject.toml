@@ -1,0 +1,15 @@
+[project]
+name = "analog-agents"
+version = "0.0.1"
+description = "Skills and workflows for agentic analog/mixed-signal design"
+requires-python = ">=3.11"
+dependencies = [
+    "virtuoso-bridge",
+    "pyyaml",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+virtuoso-bridge = { path = "virtuoso-bridge-lite", editable = true }
