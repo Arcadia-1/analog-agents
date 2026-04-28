@@ -1,3 +1,6 @@
 [submodule "virtuoso-bridge-lite"]
 	path = virtuoso-bridge-lite
 	url = https://github.com/Arcadia-1/virtuoso-bridge-lite.git
+[submodule "ADCToolbox"]
+	path = ADCToolbox
+	url = https://github.com/Arcadia-1/ADCToolbox.git
