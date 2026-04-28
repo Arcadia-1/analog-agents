@@ -40,5 +40,8 @@ wiki/user-preferences.yml
 # ── Reference docs copied locally (have their own source) ──
 skill-api-reference/
 
+# ── Third-party reference PDFs (size + redistribution concerns) ──
+references/
+
 WORK/
 WORK_DATA/
