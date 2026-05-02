@@ -1,50 +1,36 @@
 """Model Order Reduction for port-to-pin RC driving-point impedances.
 
-Implements four classical RC reduction algorithms under a common
-output schema (Foster I ladder per pin): ``{R_inf, [(R_i, tau_i), ...]}``.
+Two methods exposed (after empirical pruning):
 
-  * ``"order0"`` — single resistor R = DC driving-point. Baseline; no
-    frequency dependence.
-  * ``"elmore"`` — Elmore-delay single-pole RC.  R = μ_0, τ = −μ_1/μ_0,
-    synthesis: one parallel-RC section between port and pin
-    (Elmore 1948).
-  * ``"awe"``    — k-th order AWE [k-1/k] Padé moment matching
-    (Pillage & Rohrer 1990).  Fits the first 2k moments exactly;
-    factors D(s) into poles and does partial-fraction to get Foster I.
-  * ``"prima"``  — k-th order PRIMA via Arnoldi Krylov subspace
-    projection (Odabasioglu et al. 1998).  Same 2k moments as AWE
-    but structurally passive.
-  * ``"ticer"``  — TICER node elimination (Sheehan 1999).  Iteratively
-    eliminates interior mesh nodes whose self-time-constant is below a
-    threshold; retained ports + pins form a reduced multi-port RC
-    netlist.  Returns per-pin Foster sections by driving-point
-    extraction of the reduced system.
+  * ``"order0"`` — single resistor R = DC driving-point.  No frequency
+    dependence at the per-pin level (Cc still injected separately by
+    inject.py for inter-net coupling).  Fastest baseline.
 
-All methods produce the same output schema so ``inject.py`` is
-algorithm-agnostic.  Moments are computed once and shared where
-applicable.
+  * ``"prima"`` (q=1) — Krylov-Arnoldi 1-pole projection
+    (Odabasioglu, Celik, Pileggi, IEEE TCAD 1998).  Adds a single
+    parallel-RC section per pin via congruence projection — passivity
+    preserved by construction.  Best lumped accuracy in our
+    benchmarks.
+
+History (dropped from CLI):
+
+  * Elmore single-pole RC (Elmore 1948) — degenerates to order0 once
+    the R_common hub absorbs DC, since μ₀′ = μ₀ − R_common ≈ 0 leaves
+    nothing for the pole to model.
+  * AWE k-pole Padé (Pillage & Rohrer 1990) — numerically unstable on
+    real-size meshes for k ≥ 2.  Hankel system becomes ill-conditioned.
+  * PRIMA q ≥ 2 — collapses onto q=1 because for sub-THz simulations
+    on RC meshes the Krylov subspace converges in one iteration; the
+    extra poles all sit above the simulation bandwidth with negligible
+    residue.
+
+The kernel still computes the q=1 Arnoldi basis explicitly via
+``_prima_arnoldi_and_e``; ``foster_via_algo`` dispatches.
 
     port ──R_inf── mid_0 ──[R_1 ‖ C_1]── mid_1 ──[R_2 ‖ C_2]── ... ── pin
 
-Each parallel R_i/C_i section contributes one real pole on the
-negative real axis (passive for RC, when moments are consistent).
-
-Moment generation
------------------
-
-With the G (conductance) and C (capacitance) matrices of the mesh,
-after removing the port row/col by Dirichlet grounding, the
-port-to-pin impedance has a power-series expansion::
-
-    Z_p(s) = μ_0 + μ_1 · s + μ_2 · s² + ...
-
-where, injecting unit current at pin p::
-
-    m_0 = G_nn⁻¹ · e_p   ,  μ_0 = m_0[p]
-    m_k = -G_nn⁻¹ C_nn m_{k-1}   ,  μ_k = m_k[p]
-
-One LU factorisation of ``G_nn`` is reused for all pins and all
-moments — cheap.
+For order0: ``sections=[]`` and the chain collapses to a single
+resistor.  For prima:1: one parallel-RC section.
 """
 from __future__ import annotations
 
@@ -188,91 +174,6 @@ def compute_port_to_pin_moments(
             mus.append(float(m[p]))
         result[pe["key"]] = np.array(mus)
     return result
-
-
-def elmore_from_moments(moments: np.ndarray):
-    """Elmore-style single-pole RC from μ_0 and μ_1.
-
-    Z(s) ≈ R / (1 + s τ),  R = μ_0,  τ = −μ_1 / μ_0.
-    Synthesis: one parallel-RC section between port and pin.
-    Always passive if μ_0 > 0 and μ_1 < 0 (both hold for RC meshes).
-    """
-    if len(moments) < 2:
-        return None
-    mu0, mu1 = float(moments[0]), float(moments[1])
-    if mu0 <= 0 or mu1 >= 0:
-        # Degenerate (e.g. no capacitance) — fall back to pure R.
-        return {"R_inf": mu0, "sections": []}
-    tau = -mu1 / mu0
-    # One parallel RC: R_1 = μ_0, τ_1 = τ.  No R_inf.
-    return {"R_inf": 0.0, "sections": [(mu0, tau)]}
-
-
-def awe_foster_from_moments(moments: np.ndarray, order: int):
-    """AWE [k-1/k] Padé → Foster I (Pillage & Rohrer 1990).
-
-    Fits the first 2k moments exactly.  Not guaranteed passive —
-    returns ``None`` if any resulting pole has positive real part or
-    non-trivial imaginary part.
-    """
-    import scipy.signal as ss
-    k = order
-    if k == 0:
-        return {"R_inf": float(moments[0]), "sections": []}
-
-    if len(moments) < 2 * k + 1:
-        return None
-
-    mu = np.asarray(moments, dtype=float)
-
-    # Padé [k-1/k]: Z(s) · D(s) = N(s) mod s^{2k}, with deg N = k-1.
-    # D(s) = 1 + d_1 s + ... + d_k s^k.  Forces k linear equations:
-    # for q = k..2k-1:   Σ_{j=0..k} d_j μ_{q-j} = 0.
-    # With d_0 = 1:     Σ_{j=1..k} d_j μ_{q-j} = -μ_q.
-    M = np.zeros((k, k))
-    rhs = np.zeros(k)
-    for i in range(k):
-        q = k + i
-        for j in range(k):
-            M[i, j] = mu[q - 1 - j]  # index q-(j+1)
-        rhs[i] = -mu[q]
-    try:
-        d = np.linalg.solve(M, rhs)
-    except np.linalg.LinAlgError:
-        return None
-
-    denom = np.concatenate([[1.0], d])  # ascending: s^0..s^k
-    num = np.zeros(k)                    # ascending: s^0..s^{k-1}
-    for q in range(k):
-        for j in range(min(q + 1, len(denom))):
-            num[q] += denom[j] * mu[q - j]
-
-    # scipy.signal.residue expects descending coefficients.
-    denom_desc = denom[::-1]
-    num_desc   = num[::-1]
-    poles_s = np.roots(denom_desc)
-
-    # Passivity: all poles real and strictly negative.
-    for p in poles_s:
-        if p.real >= -1e-15 or abs(p.imag) > 1e-6 * max(abs(p.real), 1.0):
-            return None
-
-    try:
-        r, p, k_dir = ss.residue(num_desc, denom_desc)
-    except Exception:
-        return None
-    r_inf = float(k_dir[0]) if len(k_dir) > 0 else 0.0
-
-    sections = []
-    for r_i, p_i in zip(r, p):
-        if abs(p_i.real) < 1e-30:
-            return None
-        tau_i = -1.0 / p_i.real
-        R_i   = -r_i.real / p_i.real
-        if R_i <= 0 or tau_i <= 0:
-            return None
-        sections.append((R_i, tau_i))
-    return {"R_inf": r_inf, "sections": sections}
 
 
 def prima_reduced_system(
@@ -504,21 +405,19 @@ def foster_via_algo(moments, G_nn, C_nn, pin_idx, algo: str, order: int, lu=None
     Parameters
     ----------
     moments : np.ndarray | None
-        Moment series μ_0 … μ_{2k}, or just μ_0 for order 0.
-        May be None if the algo doesn't need moments (PRIMA).
+        For ``order0``: just ``[μ_0]`` (DC R).  Ignored for ``prima``.
     G_nn, C_nn : sparse CSC (interior-only)
-        Only needed by PRIMA.
+        Required by PRIMA.
     pin_idx : int
         Pin index in the interior basis (for PRIMA).
-    algo : {"order0", "elmore", "awe", "prima"}
+    algo : {"order0", "prima"}
     order : int
+        Ignored for ``order0``; forced to 1 for ``prima`` (q≥2 is
+        empirically equivalent to q=1 for sub-THz RC simulations).
     """
     if algo == "order0":
         return {"R_inf": float(moments[0]), "sections": []}
-    if algo == "elmore":
-        return elmore_from_moments(moments)
-    if algo == "awe":
-        return awe_foster_from_moments(moments, order)
     if algo == "prima":
         return prima_foster(G_nn, C_nn, pin_idx, order, lu=lu)
-    raise ValueError(f"unknown MOR algo: {algo!r}")
+    raise ValueError(
+        f"unknown MOR algo: {algo!r}.  Supported: 'order0', 'prima'.")

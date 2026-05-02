@@ -94,22 +94,23 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-cache", action="store_true",
                     help="skip the pickle parse cache (force re-parse)")
     ap.add_argument("--algo", default="order0",
-                    choices=("order0", "elmore", "awe", "prima"),
-                    help="per-pin reduction algorithm. 'order0' = pure R "
-                         "(DC only). 'elmore' = single-pole RC (Elmore 1948). "
-                         "'awe' = [k-1/k] Padé (Pillage & Rohrer 1990). "
-                         "'prima' = Arnoldi Krylov projection "
-                         "(Odabasioglu et al. 1998).")
-    ap.add_argument("--order", type=int, default=0,
-                    help="reduction order (number of poles) for AWE / PRIMA. "
-                         "Ignored for order0 and elmore.")
+                    choices=("order0", "prima"),
+                    help="per-pin reduction algorithm.  Only the two "
+                         "methods we found useful in practice are "
+                         "exposed:\n"
+                         "  'order0' = pure R (DC only, fastest).\n"
+                         "  'prima'  = Krylov Arnoldi projection "
+                         "(Odabasioglu et al. 1998), single pole — gives "
+                         "the closest accuracy in the lumped 1-port model.\n"
+                         "elmore / AWE / higher-order PRIMA were dropped "
+                         "after empirical comparison: elmore degenerates "
+                         "into order0 once the R_common hub absorbs DC, "
+                         "AWE 2+ is numerically unstable on real-size "
+                         "meshes, and PRIMA q≥2 collapses onto q=1 "
+                         "because RC Krylov converges in one iteration "
+                         "for sub-THz simulations.")
     args = ap.parse_args(argv)
-    if args.algo == "order0":
-        args.order = 0
-    elif args.algo == "elmore":
-        args.order = 1
-    elif args.order < 1:
-        args.order = 1
+    args.order = 0 if args.algo == "order0" else 1
 
     if not os.path.exists(args.netlist):
         raise SystemExit(f"no such file: {args.netlist}")

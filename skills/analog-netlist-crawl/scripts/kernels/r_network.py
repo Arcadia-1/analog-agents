@@ -761,97 +761,76 @@ def _analyze_net_basics(
         if (port_nodes and all_pin_nodes
             and r_eff != float("inf") and r_eff > 0) else {}
 
-    # 6. Per-pin Foster ladder synthesis (algorithm selectable).
-    # For algo="order0" we fall back to the legacy star model (r_common
-    # + r_branch) which preserves the aggregate r_eff_cluster exactly.
-    # For order ≥ 1 we use the requested MOR algorithm.
+    # 6. Per-pin Foster ladder synthesis.  Only algo="prima" exercises
+    # this path; "order0" relies on the legacy star (r_common + r_branch)
+    # which preserves aggregate r_eff_cluster exactly.
     foster: dict[str, dict | None] = {}
-    if port_nodes and pin_entries and algo != "order0" and order >= 1:
-        from .mor import (compute_port_to_pin_moments, foster_via_algo)
+    if port_nodes and pin_entries and algo == "prima":
+        from .mor import foster_via_algo
+        import scipy.sparse as sp
+        import numpy as _np
 
-        moments = None
-        G_nn = C_nn = None
-        interior_idx_of_pin: dict[str, int] = {}
+        nodes = sorted(comp)
+        node_idx = {n: i for i, n in enumerate(nodes)}
+        N = len(nodes)
 
-        if algo in ("elmore", "awe"):
-            moments = compute_port_to_pin_moments(
-                circuit, port_nodes, pin_entries, order,
-                comp=comp, comp_r_edges=comp_r_edges,
-                comp_cg_edges=comp_cg_edges, comp_cc_edges=comp_cc_edges)
-            # Re-center moments at the hub (= port + R_common): the per-pin
-            # Foster ladder lives BETWEEN hub and pin, so μ_0' = μ_0 - R_common.
-            # Higher moments are unchanged (R_common is frequency-independent).
-            # This preserves aggregate DC R when all pins are loaded (R_common
-            # dominates for many-pin nets) while still giving per-pin
-            # spatial asymmetry at higher frequencies.
-            if moments is not None and r_common > 0:
-                for key, mus in moments.items():
-                    if mus is None: continue
-                    mus_new = mus.copy()
-                    mus_new[0] = mus_new[0] - r_common
-                    if mus_new[0] < 0:
-                        mus_new[0] = 0.0  # safety against numerical slop
-                    moments[key] = mus_new
-        if algo == "prima":
-            # PRIMA needs G_nn, C_nn, pin index in interior.
-            import scipy.sparse as sp
-            nodes = sorted(comp)
-            node_idx = {n: i for i, n in enumerate(nodes)}
-            N = len(nodes)
-            rows, cols, vals = [], [], []
-            for e in comp_r_edges:
-                ia = node_idx.get(e[0]); ib = node_idx.get(e[1])
-                if ia is None or ib is None or ia == ib: continue
-                g = 1.0 / e[2]
+        # G assembled from R edges (Laplacian, port-Dirichlet later).
+        rows, cols, vals = [], [], []
+        for e in comp_r_edges:
+            ia = node_idx.get(e[0]); ib = node_idx.get(e[1])
+            if ia is None or ib is None or ia == ib: continue
+            g = 1.0 / e[2]
+            rows += [ia, ib, ia, ib]
+            cols += [ia, ib, ib, ia]
+            vals += [g, g, -g, -g]
+        G_full = sp.coo_matrix((vals, (rows, cols)), shape=(N, N)).tocsc()
+
+        # C from Cg + internal Cc + external-end Cc-as-Cg.  External nets
+        # are treated as AC-grounded (standard MOR assumption).
+        rows, cols, vals = [], [], []
+        for e in comp_cg_edges:
+            ia = node_idx.get(e[0]); ib = node_idx.get(e[1])
+            if ia is not None and ib is None:
+                rows.append(ia); cols.append(ia); vals.append(e[2])
+            elif ib is not None and ia is None:
+                rows.append(ib); cols.append(ib); vals.append(e[2])
+            elif ia is not None and ib is not None and ia != ib:
                 rows += [ia, ib, ia, ib]
                 cols += [ia, ib, ib, ia]
-                vals += [g, g, -g, -g]
-            G_full = sp.coo_matrix((vals, (rows, cols)), shape=(N, N)).tocsc()
-            rows, cols, vals = [], [], []
-            # Cg: whichever end is in comp gets +c on its diagonal.
-            for e in comp_cg_edges:
-                ia = node_idx.get(e[0]); ib = node_idx.get(e[1])
-                if ia is not None and ib is None:
-                    rows.append(ia); cols.append(ia); vals.append(e[2])
-                elif ib is not None and ia is None:
-                    rows.append(ib); cols.append(ib); vals.append(e[2])
-                elif ia is not None and ib is not None and ia != ib:
-                    rows += [ia, ib, ia, ib]
-                    cols += [ia, ib, ib, ia]
-                    vals += [e[2], e[2], -e[2], -e[2]]
-            # Cc: both ends in comp → off-diagonal; otherwise diagonal at internal end.
-            for e in comp_cc_edges:
-                ia = node_idx.get(e[0]); ib = node_idx.get(e[1])
-                if ia is None and ib is None: continue
-                if ia is None:
-                    rows.append(ib); cols.append(ib); vals.append(e[2])
-                elif ib is None:
-                    rows.append(ia); cols.append(ia); vals.append(e[2])
-                elif ia != ib:
-                    rows += [ia, ib, ia, ib]
-                    cols += [ia, ib, ib, ia]
-                    vals += [e[2], e[2], -e[2], -e[2]]
-            C_full = (sp.coo_matrix((vals, (rows, cols)), shape=(N, N)).tocsc()
-                      if vals else sp.csc_matrix((N, N)))
-            port_set = {node_idx[n] for n in port_nodes if n in node_idx}
-            interior = [i for i in range(N) if i not in port_set]
-            import numpy as _np
-            int_arr = _np.array(interior)
-            reduce_map = {full: red for red, full in enumerate(interior)}
-            G_nn = G_full[int_arr][:, int_arr].tocsc()
-            C_nn = C_full[int_arr][:, int_arr].tocsc()
-            for pe in pin_entries:
-                full_i = node_idx.get(pe["subnode"])
-                if full_i is not None and full_i in reduce_map:
-                    interior_idx_of_pin[pe["key"]] = reduce_map[full_i]
+                vals += [e[2], e[2], -e[2], -e[2]]
+        for e in comp_cc_edges:
+            ia = node_idx.get(e[0]); ib = node_idx.get(e[1])
+            if ia is None and ib is None: continue
+            if ia is None:
+                rows.append(ib); cols.append(ib); vals.append(e[2])
+            elif ib is None:
+                rows.append(ia); cols.append(ia); vals.append(e[2])
+            elif ia != ib:
+                rows += [ia, ib, ia, ib]
+                cols += [ia, ib, ib, ia]
+                vals += [e[2], e[2], -e[2], -e[2]]
+        C_full = (sp.coo_matrix((vals, (rows, cols)), shape=(N, N)).tocsc()
+                  if vals else sp.csc_matrix((N, N)))
+
+        # Reduce by removing port rows/cols (Dirichlet V=0).
+        port_set = {node_idx[n] for n in port_nodes if n in node_idx}
+        interior = [i for i in range(N) if i not in port_set]
+        int_arr = _np.array(interior)
+        reduce_map = {full: red for red, full in enumerate(interior)}
+        G_nn = G_full[int_arr][:, int_arr].tocsc()
+        C_nn = C_full[int_arr][:, int_arr].tocsc()
+        interior_idx_of_pin: dict[str, int] = {}
+        for pe in pin_entries:
+            full_i = node_idx.get(pe["subnode"])
+            if full_i is not None and full_i in reduce_map:
+                interior_idx_of_pin[pe["key"]] = reduce_map[full_i]
 
         for pe in pin_entries:
             key = pe["key"]
-            mus = moments.get(key) if moments else None
             pin_idx = interior_idx_of_pin.get(key)
             try:
                 foster[key] = foster_via_algo(
-                    mus, G_nn, C_nn, pin_idx, algo, order)
+                    None, G_nn, C_nn, pin_idx, algo, order)
             except Exception:
                 foster[key] = None
 

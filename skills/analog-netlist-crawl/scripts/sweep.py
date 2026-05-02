@@ -41,7 +41,7 @@ from kernels.r_network import (
     _build_adjacency, _build_canonical_node_map, _component_of,
     effective_resistance, per_instance_port_r, _compute_position_map,
 )
-from kernels.mor import (compute_port_to_pin_moments, foster_via_algo,
+from kernels.mor import (foster_via_algo,
                          _prima_arnoldi_and_e, prima_foster_slice)
 from parse_cache import load_or_parse
 
@@ -68,16 +68,22 @@ def main(argv=None):
     ap.add_argument("--extra-resolve-nets", default="")
     ap.add_argument("--configs", default=None,
                     help="comma-separated algo:order pairs, e.g. "
-                         "'order0:0,awe:2,prima:3'.  If omitted, "
-                         "defaults to the value selected by --preset.")
+                         "'order0:0,prima:1'.  If omitted, defaults to "
+                         "the value selected by --preset.  Only "
+                         "order0:0 and prima:1 are exposed — see "
+                         "kernels/mor.py for why other variants were "
+                         "dropped.")
     ap.add_argument("--preset", default="minimal",
-                    choices=("minimal", "all", "prima", "awe"),
+                    choices=("minimal",),
                     help="shortcut config set when --configs is not "
-                         "given.  'minimal' = order0:0,prima:1 (the two "
-                         "distinct results we observed on both test "
-                         "circuits; default).  'all' = every algo × "
-                         "every useful order.  'prima' = PRIMA 1..4.  "
-                         "'awe' = AWE 1..4.")
+                         "given.  Only 'minimal' = 'order0:0,prima:1' is "
+                         "exposed — that's the full useful set.  After "
+                         "an empirical sweep of (order0, elmore, awe 1..4, "
+                         "prima 1..4) on AMP and OTA test circuits, only "
+                         "these two produced distinct numerical results "
+                         "with stable behaviour; the rest collapsed onto "
+                         "one of them or blew up numerically.  Use "
+                         "--configs for custom mixes.")
     ap.add_argument("--out-dir", required=True)
     ap.add_argument("--out-prefix", default="rc_")
     ap.add_argument("--no-cache", action="store_true")
@@ -85,9 +91,6 @@ def main(argv=None):
 
     presets = {
         "minimal": "order0:0,prima:1",
-        "all":     "order0:0,elmore:1,awe:1,awe:2,awe:3,prima:1,prima:2,prima:3,prima:4",
-        "prima":   "order0:0,prima:1,prima:2,prima:3,prima:4",
-        "awe":     "order0:0,elmore:1,awe:1,awe:2,awe:3",
     }
     cfg_str = args.configs if args.configs else presets[args.preset]
     print(f"# configs string: {cfg_str}", file=sys.stderr)
@@ -97,13 +100,17 @@ def main(argv=None):
         raise SystemExit("--nets is required")
     outdir = Path(args.out_dir); outdir.mkdir(parents=True, exist_ok=True)
 
-    max_order = max((o for _, o in configs), default=0)
-    need_moments = any(a in ("elmore", "awe") for a, _ in configs)
+    # Validate: only order0 and prima are exposed configs.
+    for algo, order in configs:
+        if algo not in ("order0", "prima"):
+            raise SystemExit(
+                f"unsupported algo {algo!r}.  Only 'order0' and 'prima' "
+                "remain after empirical pruning (see mor.py docstring).")
     need_prima = any(a == "prima" for a, _ in configs)
     max_prima_order = max((o for a, o in configs if a == "prima"), default=0)
 
     print(f"# configs: {configs}", file=sys.stderr)
-    print(f"# max_order = {max_order}, need_moments={need_moments}, need_prima={need_prima}",
+    print(f"# need_prima={need_prima}, max_prima_order={max_prima_order}",
           file=sys.stderr)
 
     # ---- parse (cached) ----
@@ -251,25 +258,8 @@ def main(argv=None):
             _comp_edges=comp_r_edges) \
               if (port_nodes and all_pin_nodes and r_eff not in (float("inf"),) and r_eff > 0) else {}
 
-        # Moments (one-shot at max_order for AWE/Elmore). Reuses the LU
-        # factorisation from per_instance_port_r via reduced_cache.
-        mus = None
-        if need_moments and port_nodes and pin_entries and max_order >= 1:
-            mus = compute_port_to_pin_moments(
-                circuit, port_nodes, pin_entries, max_order,
-                comp=comp, comp_r_edges=comp_r_edges,
-                comp_cg_edges=comp_cg_edges, comp_cc_edges=comp_cc_edges,
-                _shared=reduced_cache)
-            # Apply R_common shift (once).
-            if mus is not None and r_common > 0:
-                for k, m in list(mus.items()):
-                    if m is None: continue
-                    mm = m.copy()
-                    mm[0] = max(mm[0] - r_common, 0.0)
-                    mus[k] = mm
-
         # PRIMA matrices.  Reuse LU from reduced_cache when available
-        # (same G_nn factorisation as per_instance_port_r / moments).
+        # (same G_nn factorisation as per_instance_port_r).
         prima_mats = None
         if need_prima and port_nodes and pin_entries:
             nodes = sorted(comp)
@@ -352,7 +342,7 @@ def main(argv=None):
             port_nodes=port_nodes, r_eff=r_eff,
             per_pin_r=per_pin, r_common=r_common, r_branch=r_branch,
             position=pos, comp_cc_edges=comp_cc_edges,
-            mus=mus, prima_mats=prima_mats,
+            prima_mats=prima_mats,
         )
 
     print(f"# per-net analysis: {time.perf_counter()-t_net:.2f}s", file=sys.stderr)
@@ -416,36 +406,22 @@ def main(argv=None):
                 })
                 continue
             foster: dict = {}
-            if (order == 0 or algo == "order0") or not sh["pin_entries"]:
+            if algo == "order0" or not sh["pin_entries"]:
                 pass  # legacy star path (foster stays empty, inject uses r_branch)
-            else:
+            elif algo == "prima" and sh["prima_mats"]:
+                G_nn_, C_nn_, pin_int, lu_, prima_basis = sh["prima_mats"]
                 for pe in sh["pin_entries"]:
                     k = pe["key"]
-                    mus = None
-                    if sh["mus"]:
-                        m_full = sh["mus"].get(k)
-                        if m_full is not None:
-                            # truncate moment series to 2*order+1 (needed for AWE [order-1/order])
-                            n_needed = 2 * order + 1 if order >= 1 else 1
-                            mus = m_full[:n_needed]
-                    if algo == "prima" and sh["prima_mats"]:
-                        G_nn_, C_nn_, pin_int, lu_, prima_basis = sh["prima_mats"]
-                        basis = prima_basis.get(k)
-                        if basis is None:
-                            foster[k] = None
-                        else:
-                            Vq, e_proj = basis
-                            try:
-                                foster[k] = prima_foster_slice(
-                                    G_nn_, C_nn_, Vq, e_proj, order)
-                            except Exception:
-                                foster[k] = None
-                    else:
-                        try:
-                            foster[k] = foster_via_algo(
-                                mus, None, None, None, algo, order)
-                        except Exception:
-                            foster[k] = None
+                    basis = prima_basis.get(k)
+                    if basis is None:
+                        foster[k] = None
+                        continue
+                    Vq, e_proj = basis
+                    try:
+                        foster[k] = prima_foster_slice(
+                            G_nn_, C_nn_, Vq, e_proj, order)
+                    except Exception:
+                        foster[k] = None
             prescriptions.append({
                 "net": net, "component_size": len(sh["comp"]),
                 "pin_entries": sh["pin_entries"],
