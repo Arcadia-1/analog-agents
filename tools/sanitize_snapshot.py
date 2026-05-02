@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Sanitize a snapshot directory (or file) using the token map in
-``local/context.yml``.
+``_local/context.yml``.
 
 Pure-dictionary replacement: whatever appears as a key in the ``sanitize:``
 section is replaced by its value in every text file of the snapshot.
@@ -43,8 +43,8 @@ import yaml
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MAP = PROJECT_ROOT / "local" / "sanitize-map.yml"
-LEGACY_CONTEXT = PROJECT_ROOT / "local" / "context.yml"    # fallback: old `sanitize:` section
+DEFAULT_MAP = PROJECT_ROOT / "_local" / "sanitize-map.yml"
+LEGACY_CONTEXT = PROJECT_ROOT / "_local" / "context.yml"   # fallback: old `sanitize:` section
 
 # Extensions we KNOW are binary — skip them without attempting text decode
 # (avoids reading large images/PDFs/zips into memory just to fail).
@@ -130,8 +130,8 @@ def main() -> int:
                     help="snapshot directory or single file")
     ap.add_argument("--map", "--context", dest="map_path", type=Path,
                     default=None,
-                    help="path to sanitize-map.yml (default: local/sanitize-map.yml; "
-                         "falls back to local/context.yml `sanitize:` section)")
+                    help="path to sanitize-map.yml (default: _local/sanitize-map.yml; "
+                         "falls back to _local/context.yml `sanitize:` section)")
     ap.add_argument("--out", type=Path, default=None,
                     help="destination; default is <target>__sanitized/")
     ap.add_argument("--dry-run", action="store_true",

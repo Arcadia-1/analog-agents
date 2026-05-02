@@ -1,6 +1,6 @@
 """Build a ``sanitize_fn`` callable backed by this project's map file.
 
-Plugs `local/sanitize-map.yml` into :class:`virtuoso_bridge.SanitizingClient`.
+Plugs `_local/sanitize-map.yml` into :class:`virtuoso_bridge.SanitizingClient`.
 
 Usage::
 
@@ -20,7 +20,7 @@ from pathlib import Path
 from tools.sanitize_snapshot import load_token_map, sanitize_text
 
 
-_MAP_PATH = Path(__file__).resolve().parents[1] / "local" / "sanitize-map.yml"
+_MAP_PATH = Path(__file__).resolve().parents[1] / "_local" / "sanitize-map.yml"
 
 
 def get_sanitize_fn(map_path: Path | str | None = None):

@@ -17,10 +17,10 @@ in this repo.
    without touching the parent pointer (parent `git status` will show the
    submodule as "dirty" — that's expected, ignore unless you want to bump
    the baseline for new clones).
-3. **Local context**: `local/context.yml` summarizes remote hosts, PDK paths,
+3. **Local context**: `_local/context.yml` summarizes remote hosts, PDK paths,
    projects, and usernames — read it once to orient yourself without
    re-probing the environment.
-4. **Sensitive map**: `local/sanitize-map.yml` is the pure replacement table
+4. **Sensitive map**: `_local/sanitize-map.yml` is the pure replacement table
    used by the sanitizer. It's gitignored.
 5. **Proxy**: every GitHub request (git, uv, gh, curl, WebFetch) must go
    through `http://127.0.0.1:7897` with TLS verification disabled (see
@@ -32,9 +32,10 @@ in this repo.
 |---|---|---|
 | `tools/` | Persistent CLI tools (argparse + docstring). New tools land here. | ✅ |
 | `tmp/` | Throwaway scripts: demos, probes, experiments. Often empty. | ❌ |
-| `output/` | Runtime artifacts: snapshots, downloads. May contain absolute paths. | ❌ |
+| `output/` | Snapshot / download artifacts produced by the standard SanitizingClient flow. May contain absolute paths. | ❌ |
+| `WORK_<TASK>/` | Per-task scratch dirs for downloaded reports, tool outputs, intermediate files. **Preferred over `output/<task>/`** for anything tied to a specific verification / generation run. E.g. LVS+DRC reports → `WORK_CALIBRE/{drc,lvs}/`. | ❌ (`WORK_*` glob in `.gitignore`) |
 | `example_artifacts/` | Raw + sanitized sample files for testing the sanitizer. | ❌ |
-| `local/` | Workstation-local state: `context.yml`, `sanitize-map.yml`, caches. | ❌ |
+| `_local/` | Repo-root cross-skill site config: `context.yml`, `sanitize-map.yml`, `site.yaml` (hosts/license/ssh). Loaded by `tools/sanitizer.py` + skills that need cross-skill lab values. Per-skill values live in `skills/<X>/_local/site.yaml`. | ❌ |
 | `virtuoso-bridge-lite/` | Git submodule of the upstream bridge (editable-installed). | ✅ (submodule) |
 | `skills/` | Slash-command skill definitions consumed by Claude Code. | ✅ |
 | `wiki/` | Knowledge graph: blocks, lessons, anti-patterns, strategies. | ✅ (except `projects/`) |
@@ -56,7 +57,7 @@ from tools.sanitizer import get_sanitize_fn
 
 client = SanitizingClient(
     VirtuosoClient.from_env(),
-    get_sanitize_fn(),      # reads local/sanitize-map.yml
+    get_sanitize_fn(),      # reads _local/sanitize-map.yml
 )
 
 client.download_file(remote, "output/netlists/foo.scs")
@@ -81,7 +82,7 @@ tokens. Standard loop:
 1. Download a file via `SanitizingClient`.
 2. Open `output/.../sanitized/<name>` and scan for anything that *still
    looks sensitive* (usernames, absolute paths, project codenames).
-3. If you find something unsanitized, add a row to `local/sanitize-map.yml`
+3. If you find something unsanitized, add a row to `_local/sanitize-map.yml`
    with longest-first ordering (path-prefixes come before the substrings
    they contain).
 4. Re-sanitize: `python tools/sanitize_snapshot.py <dir>` for directories,
@@ -181,9 +182,10 @@ new information:
 
 ## Don'ts
 
-- Don't commit `output/`, `local/`, `example_artifacts/`, or `tmp/` —
-  all gitignored for good reason. (`virtuoso-bridge-lite/` is a submodule,
-  not gitignored; edits inside it belong upstream.)
+- Don't commit `output/`, `WORK_*/`, `_local/`, `tmp/`, or
+  `example_artifacts/` — all gitignored for good reason.
+  (`virtuoso-bridge-lite/` is a submodule, not gitignored; edits inside
+  it belong upstream.)
 - Don't write throwaway scripts into `tools/` — use `tmp/`.
 - Don't directly edit `virtuoso-bridge-lite/` files unless you also intend
   to push the change upstream; the editable install makes silent edits

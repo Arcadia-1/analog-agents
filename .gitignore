@@ -17,8 +17,13 @@ config/servers.yml
 config/reviewers.yml
 config/effort.yml
 
-# ── Workstation-local state (context / maps / scratch) ─
+# ── Workstation-local state — historical, replaced by _local/ + tmp/ + WORK_* ──
+# Kept as defensive ignore in case anyone re-creates ./local/ accidentally.
 local/
+
+# ── Per-skill site-specific config (hostnames, license MAC, user homes) ─
+_local/
+skills/*/_local/
 
 # ── Run-time outputs (may contain absolute paths, usernames, PDKs) ──
 output/
@@ -43,5 +48,15 @@ skill-api-reference/
 # ── Third-party reference PDFs (size + redistribution concerns) ──
 references/
 
+# Workstation-local working dirs — anything starting with WORK
 WORK/
-WORK_DATA/
+WORK_*
+digital/
+AMS-IO-Agent/
+
+# ── Skills not yet ready to publish ────────────────────
+# These contain lab-specific paths, in-progress experiments, and
+# exploration artifacts. Promote individually once stable.
+skills/mixed-signal-verification/
+skills/digital-flow/
+skills/calibre/
